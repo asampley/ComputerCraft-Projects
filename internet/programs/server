@@ -1,0 +1,9 @@
+-- listen for messages from the internet
+-- process them accordingly
+-- unless the action is well defined by the protocol,
+--   nothing else will be done
+
+while true
+do
+  inet.receive()
+end

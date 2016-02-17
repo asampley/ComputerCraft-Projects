@@ -1,0 +1,75 @@
+local defaultSlot = 1
+
+-- try to take lava and refuel, and then move
+local function _bucket(finalFunc, placeFunc, bucketSlot)
+  -- select the slot with the bucket
+  local slot = bucketSlot or defaultSlot
+  turtle.select(slot)
+  
+  -- try to grab lava, assumes an empty bucket
+  -- may run into trouble if water is picked up
+  placeFunc()
+  
+  -- attempt to refuel, would work if lava
+  turtle.refuel()
+  
+  -- now do final action
+  return finalFunc()
+end
+
+-- try to fill lava bucket, and then place block
+local function _bucketPlace(itemFunc, bucketFunc, itemSlot, bucketSlot)
+  -- select slot with bucket
+  local slot = bucketSlot or defaultSlot
+  turtle.select(slot)
+  
+  -- try to grab lava, assumes an empty bucket
+  -- may run into trouble if water is picked up
+  bucketFunc()
+  
+  -- attempt to refuel, would work if lava
+  turtle.refuel()
+  
+  -- now select block slot
+  slot = itemSlot
+  turtle.select(slot)
+  
+  -- now try to place block
+  return itemFunc()
+end
+
+function forward(bucketSlot)
+  return _bucket(turtle.forward, turtle.place, bucketSlot)
+end
+
+function up(bucketSlot)
+  return _bucket(turtle.up, turtle.placeUp, bucketSlot)
+end
+
+function down(bucketSlot)
+  return _bucket(turtle.down, turtle.placeDown, bucketSlot)
+end
+
+function dig(bucketSlot)
+  return _bucket(turtle.dig, turtle.place, bucketSlot)
+end
+
+function digUp(bucketSlot)
+  return _bucket(turtle.digUp, turtle.placeUp, bucketSlot)
+end
+
+function digDown(bucketSlot)
+  return _bucket(turtle.digDown, turtle.placeDown, bucketSlot)
+end
+
+function place(itemSlot, bucketSlot)
+  return _bucketPlace(turtle.place, turtle.place, itemSlot, bucketSlot)
+end
+
+function placeUp(itemSlot, bucketSlot)
+  return _bucketPlace(turtle.placeUp, turtle.placeUp, itemSlot, bucketSlot)
+end
+
+function placeDown(itemSlot, bucketSlot)
+  return _bucketPlace(turtle.placeDown, turtle.placeDown, itemSlot, bucketSlot)
+end

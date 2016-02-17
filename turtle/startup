@@ -1,0 +1,17 @@
+-- add user programs to path
+local path = shell.path()
+path = path..":/usr/programs"
+shell.setPath(path)
+
+-- load user apis
+os.loadAPI("usr/apis/bucket")
+os.loadAPI("usr/apis/location")
+os.loadAPI("usr/apis/move")
+os.loadAPI("usr/apis/inventory")
+
+-- start parallel processing for apis
+--[[parallel.waitForAny(
+  function() shell.run("/rom/programs/shell") end,
+  function() inventory.eventListen() end
+)]]
+  

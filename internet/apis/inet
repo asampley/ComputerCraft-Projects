@@ -1,0 +1,130 @@
+-- protocol for the internet
+-- assorted constants, such as rednet protocol strings
+
+local modem = nil
+
+-- table of protocols, indexed by ID
+-- protocols must have the following attributes
+-- ID, name, and process(senderID, message)
+protocols = {}
+
+-- protocol IDs, indexed by name
+protocolIDs = {}
+
+-- set the modem by the side
+function setModem(side)
+  modem = peripheral.wrap(side)
+end
+
+-- open all known protocol channels
+function openAllKnown()
+  print("Opening channels for known protocols")
+  for protocolName, protocolID in pairs(protocolIDs)
+  do
+    print("  " .. protocolID .. ":" .. protocolName)
+    open(protocolID)
+  end
+end
+
+function open(channel)
+  if modem
+  then
+    modem.open(channel)
+  else
+    error("Modem not found. Did you set it?")
+  end
+end
+
+function printPacket(packet)
+  local sender = packet.senderID
+  local target = packet.targetID or "Everyone"
+  local protocol = packet.protocolID
+  local mtype = type(packet.message)
+  
+  write(string.format("%d:%d->%s ( ", sender, protocol, target))
+  if mtype == "table"
+  then
+    for k,v in pairs(packet.message)
+    do
+      if type(v) == "number" or type(v) == "string"
+        or type(v) == "boolean"
+      then
+        write(tostring(v).." ")
+      else
+        write("*"..type(v).."* ")
+      end
+    end
+  else
+    write(mtype)
+  end
+  
+  write(")\n")
+end
+
+-- take a protocol number, send a message to targetID
+-- send to all if targetID is nil
+function send(targetID, message, protocolID)
+  local packet = {}
+  packet.inetPacket = true
+  packet.senderID = os.getComputerID()
+  packet.targetID = targetID
+  packet.protocolID = protocolID
+  packet.message = message
+  
+  printPacket(packet)
+  
+  if modem
+  then
+    if modem.isOpen(protocolID)
+    then
+      modem.transmit(protocolID, protocolID, packet)
+    else
+      print("Warning: channel " .. protocolID .. " not listening")
+    end
+  else
+    error("Modem not found. Did you set it?")
+  end
+end
+
+function receive()
+  local event, e1, e2, e3, e4, e5 = os.pullEvent()
+  if event == "modem_message"
+  then
+    -- make sure it is an inet packet
+    if type(e4) == "table" and e4.inetPacket
+    then
+      local senderID = e4.senderID
+      local targetID = e4.targetID
+      local protocolID = e4.protocolID
+      local message = e4.message
+      
+      
+      printPacket(e4)
+      
+      -- make sure it is for us
+      if targetID == nil or (type(targetID) == "number" and tonumber(targetID) == os.getComputerID())
+      then
+        -- make sure we know the protocol
+        if protocols[protocolID] ~= nil
+        then
+          -- process message, return as per protocol
+          return senderID, protocolID, protocols[protocolID].process(senderID, message)
+          
+        end
+      end  
+    end
+  end
+end
+
+-- load other protocols, by running them
+function loadAllKnown()
+for _,fileName in ipairs(fs.list("/internet/protocols/"))
+do
+  print("Loading protocol " .. fileName)
+  os.loadAPI("/internet/protocols/" .. fileName)
+  protocols[_G[fileName].ID] = _G[fileName]
+  protocolIDs[_G[fileName].name] = _G[fileName].ID
+  print("  " .. _G[fileName].name .. " attached to channel " .. _G[fileName].ID)
+  os.unloadAPI(fileName)
+end
+end

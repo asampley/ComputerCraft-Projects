@@ -1,0 +1,77 @@
+local x = 4
+local y = 3
+local openOrClose = 1
+
+function open()
+  for i=1,x do
+    write("collumn: ")
+    print(i)
+    for j=1,y do
+      turtle.dig()
+      turtle.up()
+      write("row: ")
+      print(j)
+    end
+    -- move back down by the same number as y
+    for k=1,y do
+      turtle.down()
+    end
+    -- go to the next collumn to be mined
+    turtle.turnRight()
+    turtle.forward()
+    turtle.turnLeft()
+  end
+end
+
+function close()
+  for a=1,x do
+    for b=1,y do
+      turtle.place()
+      turtle.up()
+    end
+    for c=1,y do
+      turtle.down()
+    end
+    turtle.turnRight()
+    turtle.forward()
+    turtle.turnLeft()
+  end
+end
+
+while true do
+  turtle.refuel(64)            
+  sleep(0) 
+  if rs.getInput("right") == 1 then
+-- get into position to open door 
+    turtle.forward()
+    turtle.forward()
+    turtle.turnLeft()
+    if openOrClose == 1 then
+      open()
+      openOrClose = 0
+    end
+    else
+      close()
+      openOrClose = 1
+    end 
+-- move the turtle back to the starting location
+-- by going around the edge of the door frame
+    for e=1,(y+1) do
+      turtle.up()
+    end
+    turtle.turnLeft()
+    for f=1,(x+2) do
+      turtle.forward()
+    end
+    for g=1,(y+1) do
+      turtle.down()
+    end
+    turtle.turnLeft()
+    turtle.turnLeft()
+
+  end
+end
+
+
+
+

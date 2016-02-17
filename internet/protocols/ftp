@@ -1,0 +1,84 @@
+-- protocol
+ID = 22
+name = "ftp"
+
+--[[
+  takes message of one of the forms
+
+  {"get", sourcePath}
+  {"file", file}
+  {"dir", {{<"file" or "dir">, <file or {...}>}, ...}
+  
+  {"put", file, destPath}
+
+  {"list", path}
+  {"files", fileList}
+  {"nosuchfile"}
+  
+  returns a the packet if there is nothing to
+  be done internally with it
+--]]
+function process(senderID, message)
+
+  if message[1] == "get"
+  then
+    --print("Checking for file \"" .. message[2] .. "\"")
+    -- find file
+    -- send file
+    if not fs.exists(message[2])
+    then
+      --print("No such file")
+      inet.send(senderID, {"nosuchfile"}, ID)
+    else
+      --print("File being sent")
+      if fs.isDir(message[2])
+      then
+        local dir = packDir(message[2])
+        inet.send(senderID, {"dir", dir}, ID)
+      else
+        local file = fs.open(message[2], "r")
+        local fileContents = file.readAll()
+        inet.send(senderID, {"file", fileContents}, ID)
+        file.close()
+      end
+    end
+  elseif message[1] == "file"
+  then
+    --print("File received")
+    return message
+  elseif message[1] == "put"
+  then
+    local destPath = message[3]
+    local fileContents = message[2]
+    
+    if fs.exists(destPath)
+    then
+      print("Error, file already exists")
+    else
+      local file = fs.open(destPath, "w")
+      file.write(fileContents)
+      file.close()
+    end
+  elseif message[1] == "list"
+  then
+    --print("List being sent")
+    local files = fs.list(message[2])
+    inet.send(senderID, {"files", files}, ID)
+  elseif message[1] == "files"
+  then
+    print("List received")
+    return message
+  elseif message[1] == "nosuchfile"
+  then
+    --print("Empty file transfer packet")
+    return nil
+  end
+end
+
+--[[ returns a packet friendly directory
+  in the form of a list, of directories and files
+  within each inner directory is similarly packed
+]]
+function packDir(path)
+  fs.list(path)
+end

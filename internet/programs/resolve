@@ -1,0 +1,11 @@
+args = {...}
+
+if #args ~= 1
+then
+  print("Usage: <targetID>")
+  return
+end
+
+-- send a where packet
+inet.send(nil, {"where", tonumber(args[1])}, inet.protocolIDs.router)
+inet.receive()

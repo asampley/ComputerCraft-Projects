@@ -1,0 +1,78 @@
+-- copy file to here from another host
+
+local args = {...}
+
+if
+ not (#args == 3 and args[1] == "list")
+ and not (#args == 4 and args[1] == "get")
+ and not (#args == 4 and args[1] == "put")
+ then
+  print("Usage: get <hostID> <remotePath> <localPath>")
+  print("Usage: list <hostID> <remotePath>")
+  print("Usage: put <hostID> <localPath> <remotePath>")
+  return
+end
+
+local operation = args[1]
+local hostID = tonumber(args[2])
+local filePath = args[3]
+local savePath = nil
+local remotePath = nil
+if operation == "get"
+then
+  savePath = args[4]
+elseif operation == "put"
+then
+  remotePath = args[4]
+end
+
+if operation == "get"
+then
+  inet.send(hostID, {"get", filePath}, inet.protocolIDs.ftp)
+elseif operation == "list"
+then
+  inet.send(hostID, {"list", filePath}, inet.protocolIDs.ftp)
+elseif operation == "put"
+then
+  local file = fs.open(filePath, "r")
+  local fileContents = file.readAll()
+  file.close()
+  inet.send(hostID, {"put", fileContents, remotePath}, inet.protocolIDs.ftp)
+end
+
+while operation == "get" or operation == "list"
+do
+
+
+local senderID, protocolID, packet = inet.receive()
+
+if senderID == hostID 
+  and protocolID == inet.protocolIDs.ftp
+then
+  if operation == "get" and packet[1] == "file"
+  then
+    if not fs.exists(savePath)
+    then
+      print("Writing file to " .. savePath)
+      local file = fs.open(savePath, "w")
+      file.write(packet[2])
+      file.close()
+      print("done")
+    else
+      error("File \"" .. savePath .. "\" already exists")
+    end
+    
+    break
+     
+  elseif operation == "list" and packet[1] == "files"
+  then
+    for k,file in pairs(packet[2])
+    do
+      print(file)
+    end
+    
+    break
+  end
+end
+
+end

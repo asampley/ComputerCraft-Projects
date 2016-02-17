@@ -1,0 +1,89 @@
+-- save old turtle functions
+local _turtle = {}
+_turtle.forward = turtle.forward
+_turtle.up = turtle.up
+_turtle.down = turtle.down
+_turtle.turnLeft = turtle.turnLeft
+_turtle.turnRight = turtle.turnRight
+
+-- track location
+local position = vector.new(0,0,0)
+local heading = vector.new(1,0,0)
+local vecUp = vector.new(0,1,0)
+
+-- new forward function
+local function forward()
+  local success = _turtle.forward()
+  if success
+  then 
+    position = position:add(heading)
+  end
+  return success
+end
+
+-- new up function
+local function up()
+  local success = _turtle.up()
+  if success
+  then
+    position = position:add(vecUp)
+  end
+  return success
+end
+
+-- new down function
+local function down()
+  local success = _turtle.down()
+  if success
+  then
+    position = position:sub(vecUp)
+  end
+  return success
+end
+
+-- new turn left function
+local function turnLeft()
+  local success = _turtle.turnLeft()
+  if success
+  then
+    local newX = heading.z
+    local newZ = -heading.x
+    heading.x = newX
+    heading.z = newZ
+  end
+  return success
+end
+
+-- new turn right function
+local function turnRight()
+  local success = _turtle.turnRight()
+  if success
+  then
+    local newX = -heading.z
+    local newZ = heading.x
+    heading.x = newX
+    heading.z = newZ
+  end
+  return success
+end
+
+-- return copy of position vector
+function getPos()
+  local loc = vector.new(0,0,0)
+  loc = loc:add(position)
+  return loc
+end
+
+-- return copy of heading vector
+function getHeading()
+  local head = vector.new(0,0,0)
+  head = head:add(heading)
+  return head
+end
+
+-- override turtle functions
+turtle.forward = forward
+turtle.up = up
+turtle.down = down
+turtle.turnLeft = turnLeft
+turtle.turnRight = turnRight

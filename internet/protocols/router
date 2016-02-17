@@ -1,0 +1,131 @@
+-- protocol
+ID = 1
+name = "router"
+routingTable = {}
+pendingTable = {}
+local oldSend = inet.send
+
+-- when this protocol is loaded, all packets
+-- will attempt to forward. All computers that
+-- will communicate with this one must know router
+local function newSend(targetID, message, protocolID)
+  -- ignore or unpack if it is already a routing packets
+  if protocolID == ID
+  then
+    -- are we beside the person, and do we need to unpack the message
+    if (message[1] == "forward" and routingTable[message[2]] == message[2])
+    then
+      -- unpack
+      oldSend(targetID, message[3].message, message[3].protocolID)
+    else
+      oldSend(targetID, message, protocolID)
+    end
+  elseif routingTable[targetID]
+  then
+    if routingTable[targetID].sendTo == targetID
+    then
+      oldSend(targetID, message, protocolID)
+    else
+      oldSend(targetID, {"forward", targetID, routingTable[targetID], message}, ID)
+    end
+  else
+    where(targetID)
+  end  
+end
+
+inet.send = newSend
+
+function where(targetID)
+  if not routingTable[targetID] 
+    and not pendingTable[targetID]
+    and targetID ~= os.getComputerID()
+  then
+    oldSend(nil, {"where", targetID}, ID)
+  end
+end
+
+--[[
+  Act as a router by storing 
+  routing table
+  The following packets are understood
+  {"where", computerID}
+  {"here", computerID, #nodes, forceOverride}
+  {"forward", computerID, packet}
+  {"unknown", computerID}
+  
+  note: if the computerID is unknown, it may become known shortly
+        if it can be found on the network
+]]
+function process(senderID, message)
+  local computerID = message[2]
+  
+  if message[1] == "here" and computerID ~= os.getComputerID()
+  then
+    if routingTable[computerID] and not message[4]
+    then
+      if routingTable[computerID].dist > message[3]
+      then
+        routingTable[computerID].sendTo = senderID
+        routingTable[computerID].dist = message[3]
+        
+        -- forward if info changed
+        message[3] = message[3] + 1
+        oldSend(nil, message, ID)
+        
+      end
+    else
+      -- check info changes, if so forward, but
+      if not (
+        routingTable[computerID]
+        and routingTable[computerID].sendTo == senderID
+        and routingTable[computerID].dist == message[3]
+        )
+      then
+        routingTable[computerID] = {}
+        routingTable[computerID].sendTo = senderID
+        routingTable[computerID].dist = message[3]
+        
+        message[3] = message[3] + 1
+        oldSend(nil, message, ID)
+      end
+    end
+    
+    pendingTable[computerID] = nil
+  elseif message[1] == "where"
+  then
+    if computerID == os.getComputerID()
+    then
+      oldSend(senderID, {"here", computerID, 1, false}, ID) 
+    elseif routingTable[computerID]
+    then
+      -- if we know where they are, reply
+      -- if we do not know where they are
+      -- propogate message, and ignore other messages
+      -- for "where" x
+      oldSend(senderID, {"here", computerID,
+        routingTable[computerID].dist + 1, false}, ID)
+    elseif not pendingTable[message[2]]
+    then
+      oldSend(nil, message, ID)
+    end
+    
+  elseif message[1] == "forward"
+  then
+    if routingTable[message[2]]
+    then
+      routingID = routingTable[message[2]]
+      message[3] = routingID
+      oldSend(routingID, message, ID)
+    elseif not pendingTable[message[2]]
+    then
+      -- look for host, reply with host not found
+      -- to sender
+      oldSend(nil, {"where", message[2]}, ID)
+      pendingTable[message[2]] = true
+      oldSend(senderID, {"unknown", message[2]}, ID)
+    end
+  elseif message[1] == "unknown"
+  then
+    return message
+  end        
+end
