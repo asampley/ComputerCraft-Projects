@@ -33,10 +33,9 @@ local function isDesired(compareFunc, detectFunc)
 end
 
 local function bruteDig(moveFunc, digFunc)
-1  while not moveFunc()
+  while not moveFunc()
   do
     digFunc()
-    i = i + 1
   end
 end
 
