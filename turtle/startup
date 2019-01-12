@@ -1,13 +1,14 @@
 -- add user programs to path
 local path = shell.path()
-path = path..":/usr/programs"
+path = path..":/bin/"
 shell.setPath(path)
 
--- load user apis
-os.loadAPI("usr/apis/bucket")
-os.loadAPI("usr/apis/location")
-os.loadAPI("usr/apis/move")
-os.loadAPI("usr/apis/inventory")
+-- load apis
+local api_path = "/lib/"
+for _, api in pairs(fs.list(api_path))
+do
+  os.loadAPI(api_path .. api)
+end
 
 -- start parallel processing for apis
 --[[parallel.waitForAny(

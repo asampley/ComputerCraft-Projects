@@ -12,7 +12,7 @@ local function newSend(targetID, message, protocolID)
   -- ignore or unpack if it is already a routing packets
   if protocolID == ID
   then
-    -- are we beside the person, and do we need to unpack the message
+    -- are we beside the person, we need to unpack the message
     if (message[1] == "forward" and routingTable[message[2]] == message[2])
     then
       -- unpack
@@ -53,8 +53,9 @@ end
   {"forward", computerID, packet}
   {"unknown", computerID}
   
-  note: if the computerID is unknown, it may become known shortly
-        if it can be found on the network
+  note: if the computerID is unknown, it may become
+        known shortly if it can be found on the 
+        network
 ]]
 function process(senderID, message)
   local computerID = message[2]

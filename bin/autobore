@@ -1,0 +1,50 @@
+-- step one, put chest in front of the turtle
+-- this is where the turtle will put things not
+--   from slot 1
+local depth
+local holes
+
+local args = {...}
+
+if #args ~= 2
+then
+  print("Usage: <depth> <#holes>")
+  print("Ex: 20 3 (depth 20, 3 holes)")
+  return
+end
+
+-- load arguments
+depth = tonumber(args[1])
+holes = tonumber(args[2])
+
+-- record chest location
+local chestPos = location.getPos()
+local chestHead = location.getHeading()
+
+-- turn back on chest, and go
+turtle.turnLeft()
+turtle.turnLeft()
+
+for h = 1,holes
+do
+  -- run bore on new spot
+  move.digTo(chestHead*-3*h + chestPos)
+  shell.run(shell.resolve("bore"), depth)
+  
+  -- drop off stuff in chest
+  move.goTo(chestPos)
+  move.turnTo(chestHead)
+  
+  for i = 2,16
+  do
+    -- confirm there is a block in front
+    if not turtle.detect()
+    then
+      return
+    end
+      
+    -- transfer items
+    turtle.select(i)
+    turtle.drop()
+  end
+end

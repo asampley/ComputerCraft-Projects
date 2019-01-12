@@ -20,12 +20,13 @@ local music = {
 }
 
 -- read config
+local config_path = "/etc/djturtle"
 local disks = {}
-local config = fs.open("/usr/configs/djturtle", "r")
+local config = fs.open(config_path, "r")
 
 if not config
 then
-  print("Config file not found at:\n/usr/configs/djturtle")
+  print("Config file not found at:\n"..config_path)
   return
 end
 while true

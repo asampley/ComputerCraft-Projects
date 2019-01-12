@@ -1,4 +1,4 @@
-local ignoreSlots = {}
+-- order of blocks examined by the turtle
 local headingOrder = {}
   headingOrder[1] = vector.new(1,0,0)
   headingOrder[2] = vector.new(0,0,1)
@@ -6,37 +6,41 @@ local headingOrder = {}
   headingOrder[4] = vector.new(0,0,-1)
 
 local args = {...}
-local slotString = args[1]
-local depth = args[2]
+local depth = args[1]
 
-for i = 1,#slotString
-do
-  ignoreSlots[i] = tonumber(slotString:sub(i,i), 16)
-end
-
--- check if block is wanted
-local function isDesired(compareFunc, detectFunc)
-  if not detectFunc()
-  then
-    return false
-  end
-    
-  for i,slot in pairs(ignoreSlots)
-  do
-    turtle.select(slot)
-    if compareFunc()
-    then
-      return false
+-- load config file to determine which blocks to ignore
+local ignore = {}
+local ignoreFile = "/etc/bore.ignore"
+local config = fs.open(ignoreFile, "r")
+if not config then 
+  error("Unable to read "..ignoreFile)
+  exit()
+else
+  -- add each block name to the ignore list
+  while true do
+    local line = config.readLine()
+    if line then ignore[line] = true
+    else break
     end
   end
-  return true
+end      
+
+-- check if block is wanted
+local function isDesired(inspectFunc)
+  local found, block = inspectFunc()
+  return found and not ignore[block.name]
 end
 
-local function bruteDig(moveFunc, digFunc)
+local function bruteDig(moveFunc, digFunc, inspectFunc)
   while not moveFunc()
   do
+    blockFound, block = inspectFunc()
+    if blockFound and block.name == "minecraft:bedrock" then
+      return false
+    end
     digFunc()
   end
+  return true
 end
 
 -- executed at every block
@@ -48,14 +52,12 @@ function doBlock(recurseDepth)
   local position = location.getPos()
     
   -- check for useful block in all flat directions
-  for i = 1,4
-  do
-  
+  for i = 1,4 do
     move.turnTo(headingOrder[i])
-    if isDesired(turtle.compare, turtle.detect)
+    if isDesired(turtle.inspect)
     then
       -- begin recursive seeking of ore
-      bruteDig(bucket.forward, turtle.dig)
+      bruteDig(bucket.forward, turtle.dig, turtle.inspect)
       doBlock(rDepth + 1)
       move.digTo(position)
     end
@@ -63,15 +65,15 @@ function doBlock(recurseDepth)
   end
   
   -- check for useful block up
-  if isDesired(turtle.compareUp, turtle.detectUp)
+  if isDesired(turtle.inspectUp)
   then
-    bruteDig(bucket.up, turtle.digUp)
+    bruteDig(bucket.up, turtle.digUp, turtle.inspectUp)
     doBlock(rDepth + 1)
     move.digTo(position)
   end
   
   -- check for useful block down if not first call
-  if (rDepth ~= 0) and (isDesired(turtle.compareDown, turtle.detectDown))
+  if (rDepth ~= 0) and (isDesired(turtle.inspectDown))
   then
     turtle.digDown()
     if bucket.down() -- will fail on bedrock
@@ -91,11 +93,13 @@ local start = location.getPos()
 
 for i = 1,depth
 do
-  while not turtle.down()
-  do
+  if not turtle.down() then
     turtle.digDown()
+    if not turtle.down() then
+      break
+    end
   end
-  
+
   -- execute per block function
   doBlock()
 end

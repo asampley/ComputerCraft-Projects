@@ -118,13 +118,13 @@ end
 
 -- load other protocols, by running them
 function loadAllKnown()
-for _,fileName in ipairs(fs.list("/internet/protocols/"))
-do
-  print("Loading protocol " .. fileName)
-  os.loadAPI("/internet/protocols/" .. fileName)
-  protocols[_G[fileName].ID] = _G[fileName]
-  protocolIDs[_G[fileName].name] = _G[fileName].ID
-  print("  " .. _G[fileName].name .. " attached to channel " .. _G[fileName].ID)
-  os.unloadAPI(fileName)
-end
+  for _,fileName in ipairs(fs.list("/internet/protocols/"))
+  do
+    print("Loading protocol " .. fileName)
+    os.loadAPI("/internet/protocols/" .. fileName)
+    protocols[_G[fileName].ID] = _G[fileName]
+    protocolIDs[_G[fileName].name] = _G[fileName].ID
+    print("  " .. _G[fileName].name .. " attached to channel " .. _G[fileName].ID)
+    os.unloadAPI(fileName)
+  end
 end

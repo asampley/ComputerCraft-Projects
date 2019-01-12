@@ -1,0 +1,13 @@
+-- ping a host
+local args = {...}
+
+local remote = tonumber(args[1])
+
+inet.send(remote, "?", "ping")
+while true do
+  local sender,_,"ping" = inet.receive("ping")
+  if sender == remote then
+    print("Recieved ping back from "..remote)
+    break
+  end
+end

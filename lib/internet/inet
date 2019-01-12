@@ -1,0 +1,23 @@
+--[[
+  This will be a wrapper for rednet to send to
+  an entire network, not just direct connections.
+--]]
+
+open = rednet.open
+close = rednet.close
+send = rednet.send
+broadcast = rednet.broadcast
+receive = rednet.receive
+isOpen = rednet.isOpen
+host = rednet.host
+unhost = rednet.unhost
+lookup = rednet.lookup
+
+-- load config
+local configPath = "/etc/inet"
+local config = fs.open(configPath, "r")
+if config then
+  for line in config.readLine do
+    open(line)
+  end
+end
