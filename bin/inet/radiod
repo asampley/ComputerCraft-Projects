@@ -1,0 +1,27 @@
+-- table for all receive related functions
+local recv = {}
+
+-- find note block
+noteBlock = peripheral.find("iron_noteblock")
+
+recv.any = function (sender, message)
+  local type = message.type
+
+  if recv[type] then
+    recv[type](sender, message)
+  else
+	error("No server receive for "..type)
+  end
+end
+
+recv.play = function(sender, message)
+  local instrument = message.instrument
+  local note = message.note
+
+  noteBlock.playNote(instrument, note)
+end
+
+while true do
+  local sender, message = inet.receive(radio.PROTOCOL)
+  recv.any(sender, message)
+end  

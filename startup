@@ -1,6 +1,7 @@
 -- add user programs to path
 local path = shell.path()
 path = path..":/bin/"
+path = path..":/bin/inet/"
 shell.setPath(path)
 
 -- load apis

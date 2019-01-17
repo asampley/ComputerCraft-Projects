@@ -16,7 +16,7 @@ notes = {
 -- read arguments
 args = {...}
 if #args ~= 1 then
-  print("Usage: bythoven <song>")
+  print("Usage: radio <song>")
   return
 end
 
@@ -28,29 +28,25 @@ if not song then
 end
 
 -- play song
-channel = 0
 for line in song.readLine do
   if line:len() ~= 0 and line:sub(1,1) ~= "#" then
     -- parse numbers in line
     local parser = line:gmatch("[0-9A-G#%.]+") -- number iterator
-    local _ = parser()
-    local note = parser()
-    local pitch = note:match("[A-G#]+")
-    local octave = note:match("[-0-9]+")
+  
+    -- parse numbers in line
+    local parser = line:gmatch("[0-9A-G#%.]+") -- number iterator
+    local instrument = tonumber(parser())
+    local note = notes[parser()]
     local time = tonumber(parser())
-    
-    if not pitch or not octave then
+   
+    if not instrument or not note then
       print("Invalid line: "..line)
     else
-      speaker.startNote(channel, pitch, octave)
+      radio.broadcast.play(instrument, note)
     end
     
     if time then
-      pcall(function() os.sleep(time) end)
-      speaker.stopAll()
-      channel = 0
-    else
-      channel = channel + 1
+      os.sleep(time)
     end
   end
 end

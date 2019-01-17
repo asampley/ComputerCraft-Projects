@@ -1,0 +1,20 @@
+-- server program
+PROTOCOL = "radio"
+
+-- table for all send related functions
+broadcast = {}
+
+--[[
+  The following messages are defined
+
+  Play a note
+  {type="play", instrument={0..5}, note={0..24}}
+  
+--]]
+local function inetBroadcast(message)
+  inet.broadcast(message, PROTOCOL)
+end
+
+broadcast.play = function(instrument, note)
+  inetBroadcast({type="play", instrument=instrument, note=note})
+end

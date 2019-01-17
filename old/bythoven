@@ -3,6 +3,9 @@
 -- <instrument> <note> [time]
 -- time is optional and in seconds
 
+-- find note block
+noteBlock = peripheral.find("iron_noteblock")
+
 -- map note names to numbers
 notes = {
   ["F#0"]=0, ["G0"]=1, ["G#0"]=2, ["A0"]=3, 
@@ -11,7 +14,9 @@ notes = {
   ["G1"]=13, ["G#1"]=14, ["A1"]=15, ["A#1"]=16,
   ["B1"]=17, ["C2"]=18, ["C#2"]=19, ["D2"]=20, 
   ["D#2"]=21, ["E2"]=22, ["F2"]=23, ["F#2"]=24
-}    
+}
+  
+    
 
 -- read arguments
 args = {...}
@@ -28,29 +33,22 @@ if not song then
 end
 
 -- play song
-channel = 0
 for line in song.readLine do
   if line:len() ~= 0 and line:sub(1,1) ~= "#" then
     -- parse numbers in line
     local parser = line:gmatch("[0-9A-G#%.]+") -- number iterator
-    local _ = parser()
-    local note = parser()
-    local pitch = note:match("[A-G#]+")
-    local octave = note:match("[-0-9]+")
+    local instrument = tonumber(parser())
+    local note = notes[parser()]
     local time = tonumber(parser())
     
-    if not pitch or not octave then
+    if not instrument or not note then
       print("Invalid line: "..line)
     else
-      speaker.startNote(channel, pitch, octave)
+      noteBlock.playNote(instrument, note)
     end
     
     if time then
-      pcall(function() os.sleep(time) end)
-      speaker.stopAll()
-      channel = 0
-    else
-      channel = channel + 1
+      os.sleep(time)
     end
   end
 end
