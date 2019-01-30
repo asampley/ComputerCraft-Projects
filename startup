@@ -4,22 +4,16 @@ path = path..":/bin/"
 path = path..":/bin/inet/"
 shell.setPath(path)
 
--- load apis
 local apiPath = "/lib/"
-local function loadAPIs(apiPath)
-  for _, api in pairs(fs.list(apiPath)) do
-    local fullPath = fs.combine(apiPath, api)
-    if fs.isDir(fullPath) then 
-      loadAPIs(fullPath)
-    else 
-      os.loadAPI(fullPath)
-    end
-  end
-end
-loadAPIs(apiPath)
+os.loadAPI("/lib/loadlib")
+loadlib.loadAPIs(apiPath)
 
 -- start parallel processing for apis
---[[parallel.waitForAll(
-  function() shell.run("/rom/programs/shell") end
-  function() shell.run("/bin/ftpd") end
-)--]]
+parallel.waitForAll(
+  function()
+    daemon.startup()
+  end,
+  function() while true do
+    shell.run("/rom/programs/shell")
+  end end
+)
