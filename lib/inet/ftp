@@ -1,4 +1,3 @@
--- server program
 PROTOCOL = "ftp"
 
 -- table for all send related functions

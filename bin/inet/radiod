@@ -1,27 +1,53 @@
 -- table for all receive related functions
 local recv = {}
 
--- find note block
-noteBlock = peripheral.find("iron_noteblock")
-
 recv.any = function (sender, message)
   local type = message.type
 
   if recv[type] then
     recv[type](sender, message)
   else
-	error("No server receive for "..type)
+	print("No server receive for "..type)
   end
 end
 
 recv.play = function(sender, message)
-  local instrument = message.instrument
-  local note = message.note
+  local pitch = message.pitch
+  local octave = message.octave
 
-  noteBlock.playNote(instrument, note)
+  speaker.startNote(pitch, octave)
 end
 
-while true do
-  local sender, message = inet.receive(radio.PROTOCOL)
-  recv.any(sender, message)
-end  
+recv.stop = function(sender, message)
+  local pitch = message.pitch
+  local octave = message.octave
+
+  speaker.stopNote(pitch, octave)
+end
+
+recv.stopAll = function(sender, message)
+  speaker.stopAll()
+end
+
+local function cleanUp()
+  speaker.stopAll()
+end
+
+-- start second thread to catch q key to quit
+parallel.waitForAny(
+  function()
+    while true do
+      local sender, message = inet.receive(radio.PROTOCOL)
+      recv.any(sender, message)
+    end
+  end,
+  function()
+    print("Press q to quit, if you don't want your speaker left on.")
+    os.pullEvent("key")
+    if key == keys.q then
+      cleanUp()
+    end
+  end
+)
+
+cleanUp()

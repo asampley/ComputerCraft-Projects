@@ -18,6 +18,8 @@ local configPath = "/etc/inet"
 local config = fs.open(configPath, "r")
 if config then
   for line in config.readLine do
-    open(line)
+    if peripheral.getType(line) == "modem" then
+      open(line)
+    end
   end
 end

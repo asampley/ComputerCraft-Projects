@@ -1,12 +1,16 @@
 -- ping a host
 local args = {...}
 
+if #args ~= 1 then
+  error("Usage: ping <remoteid>")
+end
+
 local remote = tonumber(args[1])
 
 inet.send(remote, "?", "ping")
 while true do
-  local sender,_,"ping" = inet.receive("ping")
-  if sender == remote then
+  local sender,message,_ = inet.receive("ping")
+  if sender == remote and message == "!" then
     print("Recieved ping back from "..remote)
     break
   end

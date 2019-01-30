@@ -1,6 +1,8 @@
 while true do
-  local sender,_,_ = inet.receive("ping")
-  print("Received ping from "..sender)
-  inet.send(sender, "!", "ping")
+  local sender,message,_ = inet.receive("ping")
+  if message == "?" then
+    print("Replying to ping from "..sender)
+    inet.send(sender, "!", "ping")
+  end
 end
 
