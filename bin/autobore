@@ -6,45 +6,43 @@ local holes
 
 local args = {...}
 
-if #args ~= 2
-then
-  print("Usage: <depth> <#holes>")
-  print("Ex: 20 3 (depth 20, 3 holes)")
+if #args ~= 3 then
+  print("Usage: <depth> <forward> <right>")
+  print("Ex: 20 5 4 (depth 20, and stay within a 5 x 4 area forward and right)")
   return
 end
 
 -- load arguments
 depth = tonumber(args[1])
-holes = tonumber(args[2])
+forward = tonumber(args[2])
+right = tonumber(args[3])
+if not depth then error("Depth must be an integer") end
+if not forward then error("Forward must be an integer") end
+if not right then error("Right must be an integer") end
 
 -- record chest location
-local chestPos = location.getPos()
-local chestHead = location.getHeading()
+local position = location.getPos()
+local heading = location.getHeading()
+bore.setChest(position)
 
--- turn back on chest, and go
-turtle.turnLeft()
-turtle.turnLeft()
+-- create min and max positions
+local minPosition = vector.new(0, -math.huge, 0) + position
+local maxPosition = position + heading * forward + location.turnRight(heading * right)
 
-for h = 1,holes
-do
-  -- run bore on new spot
-  move.digTo(chestHead*-3*h + chestPos)
-  shell.run(shell.resolve("bore"), depth)
-  
-  -- drop off stuff in chest
-  move.goTo(chestPos)
-  move.turnTo(chestHead)
-  
-  for i = 2,16
-  do
-    -- confirm there is a block in front
-    if not turtle.detect()
+--[[ Tile holes like this:
+     X...X...X...X
+     ..X...X...X..
+     X...X...X...X
+     ..X...X...X..
+     S...X...X...X
+--]]
+for hr = 0,right-1 do 
+  for hf = 0,forward-1 do
+    if hr % 4 == 0 and hf % 2 == 0
+      or hr % 4 == 2 and hf % 2 == 1
     then
-      return
+      -- run bore on new spot
+      bore.go(position + heading * hf + location.turnRight(heading * hr), depth, minPosition, maxPosition)
     end
-      
-    -- transfer items
-    turtle.select(i)
-    turtle.drop()
   end
 end

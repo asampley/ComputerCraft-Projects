@@ -1,3 +1,5 @@
+if not turtle then return end
+
 -- save old turtle functions
 local _turtle = {}
 _turtle.forward = turtle.forward
@@ -9,14 +11,32 @@ _turtle.turnRight = turtle.turnRight
 -- track location
 local position = vector.new(0,0,0)
 local heading = vector.new(1,0,0)
-local vecUp = vector.new(0,1,0)
+
+-- public constants (returned from functions)
+function X() return vector.new(1,0,0) end
+function Y() return vector.new(0,1,0) end
+function Z() return vector.new(0,0,1) end
+
+-- helper functions to rotate headings
+function turnLeft(heading)
+  local new = vector.new(0,0,0) + heading
+  new.x = heading.z
+  new.z = -heading.x
+  return new
+end
+  
+function turnRight(heading)
+  local new = vector.new(0,0,0) + heading
+  new.x = -heading.z
+  new.z = heading.x
+  return new
+end
 
 -- new forward function
 local function forward()
   local success = _turtle.forward()
-  if success
-  then 
-    position = position:add(heading)
+  if success then 
+    position = position + heading
   end
   return success
 end
@@ -26,7 +46,7 @@ local function up()
   local success = _turtle.up()
   if success
   then
-    position = position:add(vecUp)
+    position = position + Y()
   end
   return success
 end
@@ -34,9 +54,8 @@ end
 -- new down function
 local function down()
   local success = _turtle.down()
-  if success
-  then
-    position = position:sub(vecUp)
+  if success then
+    position = position - Y()
   end
   return success
 end
@@ -44,8 +63,7 @@ end
 -- new turn left function
 local function turnLeft()
   local success = _turtle.turnLeft()
-  if success
-  then
+  if success then
     local newX = heading.z
     local newZ = -heading.x
     heading.x = newX
@@ -57,8 +75,7 @@ end
 -- new turn right function
 local function turnRight()
   local success = _turtle.turnRight()
-  if success
-  then
+  if success then
     local newX = -heading.z
     local newZ = heading.x
     heading.x = newX
@@ -69,16 +86,12 @@ end
 
 -- return copy of position vector
 function getPos()
-  local loc = vector.new(0,0,0)
-  loc = loc:add(position)
-  return loc
+  return vector.new(0,0,0) + position
 end
 
 -- return copy of heading vector
 function getHeading()
-  local head = vector.new(0,0,0)
-  head = head:add(heading)
-  return head
+  return vector.new(0,0,0) + heading
 end
 
 -- override turtle functions

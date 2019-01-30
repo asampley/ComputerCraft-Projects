@@ -1,75 +1,63 @@
 local defaultSlot = 1
 
+-- list of fuels to bucket up
+local fuel = {}
+
+-- load config
+local configPath = "/etc/bucket"
+local config = fs.open(configPath, "r")
+if not config then error("Unable to find list of fuels in "..configPath) end
+for line in config.readLine do
+  fuel[line] = true
+end 
+
 -- try to take lava and refuel, and then move
-local function _bucket(finalFunc, placeFunc, bucketSlot)
+local function _bucket(finalFunc, placeFunc, inspectFunc, bucketSlot)
+  -- save previous slot to reselect
+  local slotOld = turtle.getSelectedSlot()
+
   -- select the slot with the bucket
   local slot = bucketSlot or defaultSlot
   turtle.select(slot)
   
   -- try to grab lava, assumes an empty bucket
   -- may run into trouble if water is picked up
-  placeFunc()
-  
-  -- attempt to refuel, would work if lava
-  turtle.refuel()
-  
+  local success, data = inspectFunc()
+  if success then
+    if fuel[data.name] then
+      placeFunc()
+      -- attempt to refuel, would work if lava
+      turtle.refuel()
+    end
+  end
+
+  -- reselect old slot
+  turtle.select(slotOld)
+   
   -- now do final action
   return finalFunc()
 end
 
--- try to fill lava bucket, and then place block
-local function _bucketPlace(itemFunc, bucketFunc, itemSlot, bucketSlot)
-  -- select slot with bucket
-  local slot = bucketSlot or defaultSlot
-  turtle.select(slot)
-  
-  -- try to grab lava, assumes an empty bucket
-  -- may run into trouble if water is picked up
-  bucketFunc()
-  
-  -- attempt to refuel, would work if lava
-  turtle.refuel()
-  
-  -- now select block slot
-  slot = itemSlot
-  turtle.select(slot)
-  
-  -- now try to place block
-  return itemFunc()
-end
-
 function forward(bucketSlot)
-  return _bucket(turtle.forward, turtle.place, bucketSlot)
+  return _bucket(turtle.forward, turtle.place, turtle.inspect, bucketSlot)
 end
 
 function up(bucketSlot)
-  return _bucket(turtle.up, turtle.placeUp, bucketSlot)
+  return _bucket(turtle.up, turtle.placeUp, turtle.inspectUp, bucketSlot)
 end
 
 function down(bucketSlot)
-  return _bucket(turtle.down, turtle.placeDown, bucketSlot)
+  return _bucket(turtle.down, turtle.placeDown, turtle.inspectDown, bucketSlot)
 end
 
-function dig(bucketSlot)
-  return _bucket(turtle.dig, turtle.place, bucketSlot)
-end
-
-function digUp(bucketSlot)
-  return _bucket(turtle.digUp, turtle.placeUp, bucketSlot)
-end
-
-function digDown(bucketSlot)
-  return _bucket(turtle.digDown, turtle.placeDown, bucketSlot)
-end
-
-function place(itemSlot, bucketSlot)
-  return _bucketPlace(turtle.place, turtle.place, itemSlot, bucketSlot)
+function place(bucketSlot)
+  return _bucket(turtle.place, turtle.place, turtle.inspect, bucketSlot)
 end
 
 function placeUp(itemSlot, bucketSlot)
-  return _bucketPlace(turtle.placeUp, turtle.placeUp, itemSlot, bucketSlot)
+  return _bucketPlace(turtle.placeUp, turtle.placeUp, turtle.inspectUp, bucketSlot)
 end
 
 function placeDown(itemSlot, bucketSlot)
-  return _bucketPlace(turtle.placeDown, turtle.placeDown, itemSlot, bucketSlot)
+  return _bucketPlace(turtle.placeDown, turtle.placeDown, turtle.inspectDown, bucketSlot)
 end

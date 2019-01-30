@@ -21,6 +21,8 @@ one of the only uses right now.
 
 --]]
 
+if not turtle then return end
+
 local slotToCount = {}
 local autoRefill = false
 
@@ -34,8 +36,7 @@ _turtle.placeUp = turtle.placeUp
 _turtle.place = turtle.place
 
 turtle.select = function(slot)
-  if (_turtle.select(slot))
-  then
+  if (_turtle.select(slot)) then
     selected = slot
     return true
   end
@@ -59,9 +60,7 @@ function eventListen()
   while true
   do
     os.pullEvent("turtle_inventory")
-    --print("Inventory changed")
     scan()
-    --printSlotCounts()
   end
 end
 
@@ -116,22 +115,15 @@ the inventory.
 
 --]]
 function scan()
-  --local initSlot = turtle.getSelectedSlot()
-  
-  for slot = 1,16
-  do
+  for slot = 1,16 do
     local count = turtle.getItemCount(slot)
     slotToCount[slot] = count
   end
-  
-  --turtle.select(initSlot)
 end
 
 function printSlotCounts()
-  for y = 1,4
-  do
-    for x = 1,4
-    do
+  for y = 1,4  do
+    for x = 1,4 do
       write(string.format("%2d ", turtle.getItemCount((y-1)*4+x)))
     end
     write("\n")
@@ -144,4 +136,13 @@ end
 
 function getAutoRefill()
   return autoRefill
+end
+
+-- Return the first free slot, otherwise nil
+function freeSlot()
+  for slot = 1,16 do
+    if turtle.getItemCount(slot) == 0 then
+      return slot
+    end
+  end
 end

@@ -1,108 +1,27 @@
--- order of blocks examined by the turtle
-local headingOrder = {}
-  headingOrder[1] = vector.new(1,0,0)
-  headingOrder[2] = vector.new(0,0,1)
-  headingOrder[3] = vector.new(-1,0,0)
-  headingOrder[4] = vector.new(0,0,-1)
-
 local args = {...}
-local depth = args[1]
 
--- load config file to determine which blocks to ignore
-local ignore = {}
-local ignoreFile = "/etc/bore.ignore"
-local config = fs.open(ignoreFile, "r")
-if not config then 
-  error("Unable to read "..ignoreFile)
-  exit()
-else
-  -- add each block name to the ignore list
-  while true do
-    local line = config.readLine()
-    if line then ignore[line] = true
-    else break
-    end
-  end
-end      
-
--- check if block is wanted
-local function isDesired(inspectFunc)
-  local found, block = inspectFunc()
-  return found and not ignore[block.name]
+if #args ~= 5 then
+  print("Usage: bore <depth> <minX> <maxX> <minZ> <maxZ>")
+  return
 end
 
-local function bruteDig(moveFunc, digFunc, inspectFunc)
-  while not moveFunc()
-  do
-    blockFound, block = inspectFunc()
-    if blockFound and block.name == "minecraft:bedrock" then
-      return false
-    end
-    digFunc()
-  end
-  return true
-end
+local depth = tonumber(args[1])
+local minX = tonumber(args[2])
+local maxX = tonumber(args[3])
+local minZ = tonumber(args[4])
+local maxZ = tonumber(args[5])
 
--- executed at every block
-function doBlock(recurseDepth)
-  -- find the recursion depth of the call
-  local rDepth = recurseDepth or 0
+if not depth then error("Depth must be an integer") end
+if not minX then error("Min X must be an integer") end
+if not maxX then error("Max X must be an integer") end
+if not minZ then error("Min Z must be an integer") end
+if not maxZ then error("Max Z must be an integer") end
 
-  -- save location
-  local position = location.getPos()
-    
-  -- check for useful block in all flat directions
-  for i = 1,4 do
-    move.turnTo(headingOrder[i])
-    if isDesired(turtle.inspect)
-    then
-      -- begin recursive seeking of ore
-      bruteDig(bucket.forward, turtle.dig, turtle.inspect)
-      doBlock(rDepth + 1)
-      move.digTo(position)
-    end
-  
-  end
-  
-  -- check for useful block up
-  if isDesired(turtle.inspectUp)
-  then
-    bruteDig(bucket.up, turtle.digUp, turtle.inspectUp)
-    doBlock(rDepth + 1)
-    move.digTo(position)
-  end
-  
-  -- check for useful block down if not first call
-  if (rDepth ~= 0) and (isDesired(turtle.inspectDown))
-  then
-    turtle.digDown()
-    if bucket.down() -- will fail on bedrock
-    then
-      doBlock(rDepth + 1)
-      move.digTo(position)
-    end
-  end
-  
-  -- return to initial position
-  -- initial position should be in straight line
-  move.digTo(position)
-end
+local position = location.getPos()
+local heading = location.getHeading()
 
--- dig down to depth
-local start = location.getPos()
+local minPosition = vector.new(minX, -math.huge, minZ) + position
+local maxPosition = vector.new(maxX, math.huge, maxZ) + position
 
-for i = 1,depth
-do
-  if not turtle.down() then
-    turtle.digDown()
-    if not turtle.down() then
-      break
-    end
-  end
-
-  -- execute per block function
-  doBlock()
-end
-
--- return to start
-move.digTo(start)
+bore.setChest(position)
+bore.go(location.getPos(), depth, minPosition, maxPosition)

@@ -91,6 +91,7 @@ function turnTo(heading)
   then
     turtle.turnLeft()
   elseif currHeading.x == heading.x and currHeading.z == heading.z
+    or heading.x == 0 and heading.y == 1 and heading.z == 0
   then
     
   else

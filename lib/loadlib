@@ -1,0 +1,10 @@
+function loadAPIs(apiPath)
+  for _, api in pairs(fs.list(apiPath)) do
+    local fullPath = fs.combine(apiPath, api)
+    if fs.isDir(fullPath) then 
+      loadAPIs(fullPath)
+    else 
+      os.loadAPI(fullPath)
+    end
+  end
+end
