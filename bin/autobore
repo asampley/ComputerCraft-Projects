@@ -30,19 +30,29 @@ local minPosition = vector.new(0, -math.huge, 0) + position
 local maxPosition = position + heading * forward + location.turnRight(heading * right)
 
 --[[ Tile holes like this:
-     X...X...X...X
-     ..X...X...X..
-     X...X...X...X
-     ..X...X...X..
-     S...X...X...X
+  X....X....X....X...
+  ...X....X....X....X
+  .X....X....X....X..
+  ....X....X....X....
+  ..X....X....X....X.
+  S....X....X....X...
 --]]
 for hr = 0,right-1 do 
   for hf = 0,forward-1 do
-    if hr % 4 == 0 and hf % 2 == 0
-      or hr % 4 == 2 and hf % 2 == 1
-    then
+    if (hf + 2 * hr) % 5 == 0 then
       -- run bore on new spot
-      bore.go(position + heading * hf + location.turnRight(heading * hr), depth, minPosition, maxPosition)
+      local top = position + heading * hf + location.turnRight(heading * hr)
+      move.digTo(top)
+      
+      -- ignore hole if it is topped with cobblestone
+      local found, block = turtle.inspectDown()
+      if found and block.name == "minecraft:cobblestone" then
+        print("Skipping ("..hf..","..hr..")")
+      else
+        bore.go(position + heading * hf + location.turnRight(heading * hr), depth, minPosition, maxPosition)
+      end
     end
   end
+
+  bore.transferToChest()
 end

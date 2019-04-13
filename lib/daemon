@@ -47,22 +47,35 @@ function startup()
   )
 end
 
+-- check status of daemon
+function status(name)
+  local daemon = daemons[name]
+  if daemon then return daemon.status else return nil end
+end
+
 -- load list of programs to run
 -- configs have the following format:
 -- command args...
 -- [reboot]
-function loadConfigs(path)
+local function loadConfigs(relPath)
+  local path = fs.combine(configPath, relPath)
+
   for i,f in ipairs(fs.list(path)) do
-    local fullpath = fs.combine(path, f)
+
+    local fullPath = fs.combine(path, f)
+
     -- load all configs under the other directory
-    if fs.isDir(fullpath) then
-      loadConfigs(fullpath)
+    if fs.isDir(fullPath) then
+      loadConfigs(fs.combine(relPath, f))
 
     -- load this config
     else
-      local config = fs.open(fullpath, "r")
+      local filePath = fs.combine(relPath, f)
+
+      local config = fs.open(fullPath, "r")
       -- first line is the command
       local line = config.readLine()
+
       if line then
         -- create entry
         local tokens = tokenise(line)
@@ -72,22 +85,24 @@ function loadConfigs(path)
         if not fs.exists(command) or fs.isDir(command) then
           print("Unable to find \""..command.."\"")
         else
-          daemons[fullpath] = {
+          daemons[filePath] = {
             status = "off",
             f=function()
-              daemons[fullpath].status = "on"
-              local run = function() os.run(environment, command, table.unpack(tokens)) end
+              daemons[filePath].status = "on"
+              local run = function()
+                os.run(environment, command, table.unpack(tokens))
+              end
               repeat
                 run()
-              until not daemons[fullpath].reboot
-              daemons[fullpath].status = "off"
+              until not daemons[filePath].reboot
+              daemons[filePath].status = "off"
             end
           }
   
           -- subsequent lines are options
           for line in config.readLine do
             if line == "reboot" then
-              --daemons[fullpath].reboot = true
+              daemons[filePath].reboot = true
             else
               print("Unrecognized option \""..line.."\" in "..fullpath)
             end
@@ -97,4 +112,4 @@ function loadConfigs(path)
     end
   end
 end
-loadConfigs(configPath)
+loadConfigs("")

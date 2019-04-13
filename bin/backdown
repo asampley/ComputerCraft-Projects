@@ -1,4 +1,6 @@
-local paths = {"bin", "lib", "etc", "startup"}
+local paths = {
+  "bin", "lib", "etc", "startup", "boot"
+}
 
 for _,f in ipairs(paths) do
   diskPath = fs.combine("disk", f)

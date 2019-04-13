@@ -1,15 +1,33 @@
--- load config file to determine which blocks to ignore
+-- configuration tables
 local ignore = {}
-local ignoreFile = "/etc/bore.ignore"
-local config = fs.open(ignoreFile, "r")
-if not config then 
-  error("Unable to read "..ignoreFile)
+local fuel = {}
+
+-- load config file to determine which blocks to ignore
+local ignorePath = "/etc/bore/ignore"
+local fuelPath = "/etc/bore/fuel"
+
+local ignoreFile = fs.open(ignorePath, "r")
+if not ignoreFile then 
+  error("Unable to read "..ignorePath)
   exit()
 else
   -- add each block name to the ignore list
-  for line in config.readLine do
+  for line in ignoreFile.readLine do
     if line:len() ~= 0 then
       ignore[line] = true
+    end
+  end
+end
+
+local fuelFile = fs.open(fuelPath, "r")
+if not ignoreFile then 
+  error("Unable to read "..fuelPath)
+  exit()
+else
+  -- add each item name to the fuel list
+  for line in fuelFile.readLine do
+    if line:len() ~= 0 then
+      fuel[line] = true
     end
   end
 end
@@ -41,12 +59,45 @@ end
 local stack = {}
 local stackI = -1
 
-local function transferToChest()
+function transferToChest()
   move.digTo(chestPos)
 
   for i = 2,16 do
+    
     turtle.select(i)
-    turtle.dropUp()
+    -- don't transfer fuel unless we are full
+    local item = turtle.getItemDetail()
+    if not shouldFuel() or not item or not fuel[item.name] then
+      turtle.dropUp()
+    end
+  end
+end
+
+function shouldFuel()
+  return turtle.getFuelLevel() ~= "unlimited"
+    and turtle.getFuelLevel() < turtle.getFuelLimit() - 1000
+end
+
+function refuel()
+  if turtle.getFuelLevel() == "unlimited"
+  then return end
+
+  for i = 2,16 do
+    turtle.select(i)
+    local item = turtle.getItemDetail()
+
+    print(shouldFuel())
+    if item then print(item.name) end
+    if item then print(fuel[item.name]) end
+
+    while shouldFuel() and item and fuel[item.name] do
+      turtle.refuel()
+      item = turtle.getItemDetail()
+    end
+
+    if not shouldFuel() then
+      break
+    end
   end
 end
 
@@ -59,7 +110,7 @@ end
 
 -- Is there enough fuel for forward and backward trip
 function enoughFuel()
-  return turtle.getFuelLevel() < #stack + #stack - stackI
+  return turtle.getFuelLevel() > #stack + #stack - stackI + 2
 end
 
 local function init(position)
@@ -112,6 +163,7 @@ function go(position, depth, minPosition, maxPosition)
     print("Unable to go")
   end
 
+  refuel()
   transferToChest()
 end
 
@@ -125,8 +177,13 @@ function continue(depth, minPosition, maxPosition)
     -- if we find something this round, switch to true
     local found = false
 
+    -- try to refuel if we don't have enough
+    if not enoughFuel() then
+      refuel()
+    end
+
     -- exit criteria
-    if enoughFuel() then
+    if not enoughFuel() then
       print("Must return before running out of fuel")
       print("Fuel: "..turtle.getFuelLevel())
       print("Blocks: "..#stack)
@@ -140,7 +197,7 @@ function continue(depth, minPosition, maxPosition)
       retreat()
       transferToChest()
       
-      if enoughFuel() then
+      if not enoughFuel() then
         print("Not enough fuel to make it there and back")
         print("Fuel: "..turtle.getFuelLevel())
         print("Blocks: "..#stack)
@@ -156,7 +213,7 @@ function continue(depth, minPosition, maxPosition)
     for h in function() return table.remove(headings) end do
       -- set proper inspect function
       local inspect = nil
-      local movment = nil
+      local movement = nil
       local dig = nil
 
       if h.y == 1 then
@@ -208,6 +265,7 @@ function continue(depth, minPosition, maxPosition)
   end
 
   print("Returning home")
+  
   retreat()
   return true
 end
