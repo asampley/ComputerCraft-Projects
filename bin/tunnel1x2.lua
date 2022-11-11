@@ -1,0 +1,173 @@
+local bucket = require("/lib/bucket")
+
+-- make a 2 high, 1 wide tunnel, and return to start
+local args = {...}
+
+-- arg[1] is the depth
+if #args < 1
+then
+  print("Usage: tunnel1x2 <depth>")
+  print("Options: -r = return")
+  print("         -b <bSlot> = use bucket for refuel")
+  print("         -w <wSlot> = place walls around tunnel")
+  return
+end
+
+local depth = 0
+local r = false
+local b = false
+local w = false
+local bSlot = 0
+local wSlot = 0
+local fuelReq = 0
+
+-- evaluate arguments
+i = 1
+while i <= #args
+do
+  if args[i] == "-r"
+  then
+    r = true
+  elseif args[i] == "-b"
+  then
+    b = true
+    bSlot = tonumber(args[i+1])
+    i = i+1
+  elseif args[i] == "-w"
+  then
+    w = true
+    wSlot = tonumber(args[i+1])
+    i = i+1
+  else
+    depth = tonumber(args[i])
+  end
+  i = i+1
+end
+
+-- calculate fuel requirements
+if r
+then
+  fuelReq = depth*2
+else
+  fuelReq = depth
+end
+
+-- refuse to go without sufficient fuel
+print("Fuel required: "..fuelReq)
+print("Current Levels: "..turtle.getFuelLevel())
+if turtle.getFuelLevel() < fuelReq
+then
+  print("Not enough fuel, please add more")
+  return
+end
+
+local _forward
+local _dig
+local _up
+local _digUp
+
+-- set move functions, based on bucket flat
+-- place functions cannot be set, as they require
+--   additional arguments
+if b
+then
+  _forward = bucket.forward
+  _dig = bucket.dig
+  _up = bucket.up
+  _digUp = bucket.digUp
+else
+  _forward = turtle.forward
+  _dig = turtle.dig
+  _up = turtle.up
+  _digUp = turtle.digUp
+end
+
+for i = 1,depth
+do
+  -- dig forward until able to move
+  while not _forward()
+  do
+    _dig()
+  end
+  _digUp()
+  
+  -- place walls on lower half, if required
+  if w
+  then
+    turtle.turnLeft()
+    
+    if b
+    then
+      bucket.place(wSlot, bSlot)
+      bucket.placeDown(wSlot, bSlot)
+    else
+      turtle.select(wSlot)
+      turtle.place()
+      turtle.placeDown()
+    end
+    
+    turtle.turnRight()
+    turtle.turnRight()
+    
+    if b
+    then
+      bucket.place(wSlot, bSlot)
+    else
+      turtle.select(wSlot)
+      turtle.place()
+    end
+    
+    turtle.turnLeft()
+  end
+end
+
+-- go to start
+-- wall upper portion if required
+if w
+then
+  while not _up()
+  do
+    _digUp()
+  end
+end
+
+if r
+then
+  turtle.turnLeft()
+  turtle.turnLeft()
+  for i = 1,depth
+  do
+    while not turtle.forward()
+    do
+      turtle.dig()
+    end
+    
+    if w
+    then
+      turtle.turnLeft()
+      
+      if b
+      then
+        bucket.place(wSlot, bSlot)
+        bucket.placeUp(wSlot, bSlot)
+      else
+        turtle.select(wSlot)
+        turtle.place()
+        turtle.placeUp()
+      end
+      
+      turtle.turnRight()
+      turtle.turnRight()
+      
+      if b
+      then
+        bucket.place(wSlot)
+      else
+        turtle.select(wSlot)
+        turtle.place()
+      end
+      
+      turtle.turnLeft()
+    end
+  end
+end

@@ -1,1 +1,13 @@
-shell.run("boot/computer")
+-- add user programs to path
+local path = shell.path()
+path = path..":/bin/"
+path = path..":/bin/inet/"
+shell.setPath(path)
+
+-- start parallel processing for apis
+parallel.waitForAll(
+  require("/lib/daemon").startup,
+  function() while true do
+    shell.run("/rom/programs/shell")
+  end end
+)
