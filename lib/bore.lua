@@ -14,7 +14,7 @@ local ignorePath = "/etc/bore/ignore"
 local fuelPath = "/etc/bore/fuel"
 
 local ignoreFile = fs.open(ignorePath, "r")
-if not ignoreFile then 
+if not ignoreFile then
   error("Unable to read "..ignorePath)
   exit()
 else
@@ -27,7 +27,7 @@ else
 end
 
 local fuelFile = fs.open(fuelPath, "r")
-if not fuelFile then 
+if not fuelFile then
   error("Unable to read "..fuelPath)
   exit()
 else
@@ -70,7 +70,7 @@ m.transferToChest = function()
   move.digTo(chestPos)
 
   for i = 2,16 do
-    
+
     turtle.select(i)
     -- don't transfer fuel unless we are full
     local item = turtle.getItemDetail()
@@ -121,7 +121,7 @@ end
 
 local function init(position)
   stack = {{
-    pos=position, 
+    pos=position,
     todo={-location.Y()},
     shaft=true
   }}
@@ -147,7 +147,7 @@ local function expand(minPosition, maxPosition, shaft)
   for _,heading in ipairs(headings) do
     local todo = position + heading
     if todo.x >= minPosition.x and todo.x <= maxPosition.x
-      and todo.y >= minPosition.y and todo.y <= maxPosition.y 
+      and todo.y >= minPosition.y and todo.y <= maxPosition.y
       and todo.z >= minPosition.z and todo.z <= maxPosition.z
     then
       table.insert(node.todo, heading)
@@ -156,8 +156,8 @@ local function expand(minPosition, maxPosition, shaft)
 
   table.insert(stack, node)
   stackI = stackI + 1
-end 
-    
+end
+
 
 m.go = function(position, depth, minPosition, maxPosition)
   init(position)
@@ -202,7 +202,7 @@ m.continue = function(depth, minPosition, maxPosition)
 
       m.retreat()
       m.transferToChest()
-      
+
       if not enoughFuel() then
         print("Not enough fuel to make it there and back")
         print("Fuel: "..turtle.getFuelLevel())
@@ -210,10 +210,10 @@ m.continue = function(depth, minPosition, maxPosition)
 
         return false
       end
-      
+
       advance()
     end
-    
+
     local headings = stack[#stack].todo
     -- check for useful block in all flat directions
     for h in function() return table.remove(headings) end do
@@ -236,20 +236,19 @@ m.continue = function(depth, minPosition, maxPosition)
         dig = turtle.dig
         move.turnTo(h)
       end
-      
+
       if isDesired(inspect) then
         -- push new position onto stack, and continue
         bruteDig(movement, dig, inspect)
         expand(minPosition, maxPosition)
-        
+
         -- we need to continue the main loop when we
         -- push to the stack
         found = true
         break
       end
-    end 
+    end
 
-    
     -- if we find nothing valuable on all headings
     if not found then
       if stack[#stack].shaft then
@@ -271,7 +270,7 @@ m.continue = function(depth, minPosition, maxPosition)
   end
 
   print("Returning home")
-  
+
   m.retreat()
   return true
 end
