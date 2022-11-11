@@ -42,9 +42,9 @@ while operation == "get" or operation == "list" do
   if sender == remote and proto == ftp.PROTOCOL
   then
     if operation == "get" then
-      if message[1] == "file" then
-        local path = message[2]
-        local contents = message[3]
+      if message.type == "file" then
+        local path = message.path
+        local contents = message.contents
         if path == filePath then 
           if not fs.exists(savePath) then
             print("Writing file to " .. savePath)
@@ -59,20 +59,20 @@ while operation == "get" or operation == "list" do
           end
           break
         end
-      elseif message[1] == "nofile" then
-        local path = message[2]
+      elseif message.type == "nofile" then
+        local path = message.path
         if path == filePath then
           error("No file "..path)
           break
         end
-      elseif message[1] == "dir" then
+      elseif message.type == "dir" then
         error("Getting directories is incomplete")
         break
       end
     elseif operation == "list" then
-      if message[1] == "files" then
-        local path = message[2]
-        local list = message[3]
+      if message.type == "files" then
+        local path = message.path
+        local list = message.list
         
         if path == filePath then
           for _,file in pairs(list) do
@@ -80,8 +80,8 @@ while operation == "get" or operation == "list" do
           end
           break
         end
-      elseif message[1] == "nodir" then
-        local path = message[2]
+      elseif message.type == "nodir" then
+        local path = message.path
         if path == filePath then
           error("No directory "..path)
           break

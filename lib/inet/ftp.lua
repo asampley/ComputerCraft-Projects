@@ -29,38 +29,38 @@ local function inetSend(remote, message)
 end
 
 m.send.get = function(remote, path)
-  inetSend(remote, {"get", path})
+  inetSend(remote, { type = "get", path = path })
 end
 
 m.send.list = function(remote, path)
-  inetSend(remote, {"list", path})
+  inetSend(remote, { type = "list", path = path })
 end
 
 m.send.put = function(remote, filePath, remotePath)
   local file = fs.open(filePath, "r")
   local fileContents = file.readAll()
   file.close()
-  inetSend(remote, {"put", fileContents, remotePath})
+  inetSend(remote, { type = "put", contents = fileContents, path = remotePath })
 end
 
 m.send.nofile = function(remote, path)
-  inetSend(remote, {"nofile", path})
+  inetSend(remote, { type = "nofile", path = path })
 end
 
 m.send.file = function(remote, path, file)
-  inetSend(remote, {"file", path, file})
+  inetSend(remote, { type = "file", path = path, contents = file})
 end
 
 m.send.dir = function(remote, path, dir)
-  inetSend(remote, {"dir", path, dir})
+  inetSend(remote, { type = "dir", path = path, dir = dir})
 end
 
 m.send.files = function(remote, path, list)
-  inetSend(remote, {"files", path, list})
+  inetSend(remote, { type = "files", path = path, list = list})
 end
 
 m.send.nodir = function(remote, path)
-  inetSend(remote, {"nodir", path})
+  inetSend(remote, { type = "nodir", path = path})
 end
 
 return m
