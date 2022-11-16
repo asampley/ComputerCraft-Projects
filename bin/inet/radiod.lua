@@ -43,15 +43,15 @@ recv.any = function (sender, message)
 end
 
 recv.play = function(sender, message)
-  local pitch = radio.pitchMap[message.pitch]
-  local octave = message.octave
+  -- offset pitch from midi standard to minecraft note blocks
+  local key = message.key + 6
+  local velocity = message.velocity
 
-  local note = (pitch + 12 * octave)
-  local map = noteMap[note]
-  
+  local map = noteMap[key]
+
   if map then
-    note = note + 12 * map.octaveOffset
-    speaker.playNote(map.instrument, 1, note)
+    key = (key + 12 * map.octaveOffset) % 24
+    speaker.playNote(map.instrument, velocity, key)
   end
 end
 
