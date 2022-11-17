@@ -4,7 +4,7 @@ local move = require("/lib/move")
 
 local air = "."
 
---[[ 
+--[[
 
 Load a build file, and build
 the structure, bottom up. Any blocks
@@ -37,7 +37,7 @@ is the symbol for nothing):
   AAAA
   AAAA
   BAAA
-  
+
   AAAA
   A..A
   AAAA
@@ -52,92 +52,85 @@ and the next layer is the top.
 --]]
 
 --[[
-Read a blueprint, return 
+Read a blueprint, return
 width, depth, height, design, invMap, commentMap}
 --]]
-function readBlueprint(fileName)
-  
+local function readBlueprint(fileName)
   local blueprint = {}
-  
-  
   local lineNumber = 0
   local file = fs.open(fileName, "r")
-  if not file 
-  then 
+  if not file
+  then
     return nil
   end
-  
+
   -- read dimensions
   local dimensions = file.readLine()
   lineNumber = lineNumber + 1
   local dimStrings = {}
-  dimensions:gsub("%d+", function (i) table.insert(dimStrings, i) end)
-  
+  dimensions:gsub("%d+", function(i) table.insert(dimStrings, i) end)
+
   blueprint.width = tonumber(dimStrings[1])
   blueprint.depth = tonumber(dimStrings[2])
   blueprint.height = tonumber(dimStrings[3])
-  
+
   -- read all symbol and slot pairs
   local symbolLine = nil
   blueprint.invMap = {}
   blueprint.commentMap = {}
-  while symbolLine ~= "Blueprint:"
-  do
+  while symbolLine ~= "Blueprint:" do
     symbolLine = file.readLine()
     lineNumber = lineNumber + 1
-    local symbol = symbolLine:sub(1,1)
+    local symbol = symbolLine:sub(1, 1)
     local nextSpace = symbolLine:find(" ", 3)
     print(nextSpace)
     if not nextSpace
     then
-        nextSpace = -1
+      nextSpace = -1
     end
     local invSlot = tonumber(symbolLine:sub(3, nextSpace))
     local comment = symbolLine:sub(nextSpace + 1)
-    
+
     blueprint.invMap[symbol] = invSlot
     blueprint.commentMap[symbol] = comment
   end
-  
+
   -- read blueprint
   local blueprintLine = nil
   blueprint.design = {}
-  
-  for x = 0,blueprint.width-1 do
+
+  for x = 0, blueprint.width - 1 do
     blueprint.design[x] = {}
-    for y = 0,blueprint.height-1 do
+    for y = 0, blueprint.height - 1 do
       blueprint.design[x][y] = {}
     end
   end
-        
-  
-  for y = 0,blueprint.height-1
-  do
-    for z = 0,blueprint.depth-1
-    do
+
+
+  for y = 0, blueprint.height - 1 do
+    for z = 0, blueprint.depth - 1 do
       blueprintLine = file.readLine()
       lineNumber = lineNumber + 1
       if not blueprintLine
       then
-        error("at line "..lineNumber..": number of lines in block does not match depth")
+        error("at line " .. lineNumber .. ": number of lines in block does not match depth")
       elseif blueprintLine:len() ~= blueprint.width
-      then 
-        error("at line "..lineNumber..":"..
-              "\nline is not the same as <width>"..
-                "\nExpected: "..blueprint.width..
-                "\nGot: "..blueprintLine:len()) 
+      then
+        error("at line " .. lineNumber .. ":" ..
+          "\nline is not the same as <width>" ..
+          "\nExpected: " .. blueprint.width ..
+          "\nGot: " .. blueprintLine:len())
       end
-      for x = 0,blueprint.width-1
-      do
-        blueprint.design[x][y][z] = blueprintLine:sub(x+1,x+1)
+      for x = 0, blueprint.width - 1 do
+        blueprint.design[x][y][z] = blueprintLine:sub(x + 1, x + 1)
       end
-      
+
     end
     -- read newline after block
-    blueprintLine = file.readLine()  
+    blueprintLine = file.readLine()
     lineNumber = lineNumber + 1
   end
-  
+
   return blueprint
 end
 
@@ -150,52 +143,49 @@ up to complete the next planes and
 complete the structure
 
 --]]
-function build(blueprint)
+local function build(blueprint)
   local start = location.getPos()
   local forward = location.getHeading()
   turtle.turnRight()
   local right = location.getHeading()
-  local up = vector.new(0,1,0)
- 
+  local up = vector.new(0, 1, 0)
+
   --print("init done")
-    
+
   local invertX = false
   local invertZ = false
-  local xi, yi, zi = 0,0,0
-  for y = 0,blueprint.height-1
-  do
+  local xi, yi, zi = 0, 0, 0
+  for y = 0, blueprint.height - 1 do
     local yi = y
-    for x = 0,blueprint.width-1
-    do
+    for x = 0, blueprint.width - 1 do
       if invertX then
-        xi = blueprint.width-1-x
+        xi = blueprint.width - 1 - x
       else
         xi = x
       end
-        
-      for z = 0,blueprint.depth-1
-      do
+
+      for z = 0, blueprint.depth - 1 do
         if invertZ then
-          zi = blueprint.depth-1-z
+          zi = blueprint.depth - 1 - z
         else
           zi = z
         end
-        
+
         -- move to location above block
-        local buildPos = start + (forward*zi) + (right*xi) + (up*(yi+1))
+        local buildPos = start + (forward * zi) + (right * xi) + (up * (yi + 1))
         move.digTo(buildPos)
-        
+
         -- remove block underneath
         turtle.digDown()
-        
+
         -- select correct inventory slot
         local block = blueprint.design[xi][yi][zi]
-        
+
         if block ~= air
         then
           local slot = blueprint.invMap[block]
           turtle.select(slot)
-        
+
           -- place a block down
           while not turtle.placeDown() do turtle.digDown() end
         end
@@ -203,12 +193,12 @@ function build(blueprint)
       -- we are on the other side, so
       -- switch directions
       invertZ = not invertZ
-      
+
     end -- end x
-      -- we are on the other side, so
-      -- switch directions
-      invertX = not invertX
-  end -- end y        
+    -- we are on the other side, so
+    -- switch directions
+    invertX = not invertX
+  end -- end y
 end
 
 -- First, let's turn autofill on
@@ -217,7 +207,7 @@ inventory.setAutoRefill(true)
 
 -- Now, let's see what file we're
 -- using
-args = {...}
+local args = { ... }
 if #args ~= 1
 then
   print("Usage: <fileName>")
@@ -227,14 +217,17 @@ end
 local fileName = args[1]
 local blueprint = readBlueprint(fileName)
 
+if not blueprint then
+  error("Unable to read blueprint "..fileName)
+end
+
 print("Loaded blueprint:")
-print("  width=  "..blueprint.width)
-print("  depth=  "..blueprint.depth)
-print("  height= "..blueprint.height)
+print("  width=  " .. blueprint.width)
+print("  depth=  " .. blueprint.depth)
+print("  height= " .. blueprint.height)
 print("  inventory:")
-for symbol,slot in pairs(blueprint.invMap)
-do
-  print("    "..symbol.."->"..slot.." "..blueprint.commentMap[symbol])
+for symbol, slot in pairs(blueprint.invMap) do
+  print("    " .. symbol .. "->" .. slot .. " " .. blueprint.commentMap[symbol])
 end
 
 -- wait for user confirmation

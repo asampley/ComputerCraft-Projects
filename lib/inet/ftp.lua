@@ -9,13 +9,13 @@ m.send = {}
 
 --[[
   The following messages are defined
-  
+
   Get request should return either a file or a dir
   {"get", path}
   {"nofile", path}
   {"file", path, file}
   {"dir", path, {{<"file" or "dir">, <file or {...}>}, ...}
-  
+
   Put request should place a file on the server
   {"put", path, file}
 
@@ -48,19 +48,19 @@ m.send.nofile = function(remote, path)
 end
 
 m.send.file = function(remote, path, file)
-  inetSend(remote, { type = "file", path = path, contents = file})
+  inetSend(remote, { type = "file", path = path, contents = file })
 end
 
 m.send.dir = function(remote, path, dir)
-  inetSend(remote, { type = "dir", path = path, dir = dir})
+  inetSend(remote, { type = "dir", path = path, dir = dir })
 end
 
 m.send.files = function(remote, path, list)
-  inetSend(remote, { type = "files", path = path, list = list})
+  inetSend(remote, { type = "files", path = path, list = list })
 end
 
 m.send.nodir = function(remote, path)
-  inetSend(remote, { type = "nodir", path = path})
+  inetSend(remote, { type = "nodir", path = path })
 end
 
 return m

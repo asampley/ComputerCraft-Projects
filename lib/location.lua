@@ -3,10 +3,10 @@ if not turtle then return end
 local m = {}
 
 -- track location globally
-if not _G.location then 
+if not _G.location then
   _G.location = {
-    position = vector.new(0,0,0),
-    heading = vector.new(1,0,0),
+    position = vector.new(0, 0, 0),
+    heading = vector.new(1, 0, 0),
   }
 
   -- save old turtle functions
@@ -20,7 +20,7 @@ if not _G.location then
   -- new forward function
   local function forward()
     local success = _turtle.forward()
-    if success then 
+    if success then
       _G.location.position = _G.location.position + _G.location.heading
     end
     return success
@@ -69,7 +69,6 @@ if not _G.location then
     return success
   end
 
-
   -- override turtle functions
   _G.turtle.forward = forward
   _G.turtle.up = up
@@ -79,32 +78,32 @@ if not _G.location then
 end
 
 -- public constants (returned from functions)
-m.X = function() return vector.new(1,0,0) end
-m.Y = function() return vector.new(0,1,0) end
-m.Z = function() return vector.new(0,0,1) end
+m.X = function() return vector.new(1, 0, 0) end
+m.Y = function() return vector.new(0, 1, 0) end
+m.Z = function() return vector.new(0, 0, 1) end
 
 -- helper functions to rotate headings
 m.turnLeft = function(heading)
-  local new = vector.new(0,0,0) + heading
+  local new = vector.new(0, 0, 0) + heading
   new.x = heading.z
   new.z = -heading.x
   return new
 end
-  
+
 m.turnRight = function(heading)
-  local new = vector.new(0,0,0) + heading
+  local new = vector.new(0, 0, 0) + heading
   new.x = -heading.z
   new.z = heading.x
   return new
 end
 -- return copy of position vector
 m.getPos = function()
-  return vector.new(0,0,0) + _G.location.position
+  return vector.new(0, 0, 0) + _G.location.position
 end
 
 -- return copy of heading vector
 m.getHeading = function()
-  return vector.new(0,0,0) + _G.location.heading
+  return vector.new(0, 0, 0) + _G.location.heading
 end
 
 return m

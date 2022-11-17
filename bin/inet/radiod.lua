@@ -12,17 +12,16 @@ local config = fs.open("/etc/radiod", "r")
 if config then
   for line in config.readLine do
     if line:len() ~= 0 then
-      local lower, upper, instrument, octaveOffset
-        = line:match("([0-9]+) ([0-9]+) ([^ ]+) ([+-]?[0-9])")
+      local lower, upper, instrument, octaveOffset = line:match("([0-9]+) ([0-9]+) ([^ ]+) ([+-]?[0-9])")
 
       if not lower then
-        error("Error parsing line of config: "..line)
+        error("Error parsing line of config: " .. line)
       end
 
       local lower, upper = tonumber(lower), tonumber(upper)
       local octaveOffset = tonumber(octaveOffset) - math.floor(lower / 12)
 
-      for i = lower,upper do
+      for i = lower, upper do
         noteMap[i] = {
           instrument = instrument,
           octaveOffset = octaveOffset
@@ -32,13 +31,13 @@ if config then
   end
 end
 
-recv.any = function (sender, message)
+recv.any = function(sender, message)
   local type = message.type
 
   if recv[type] then
     recv[type](sender, message)
   else
-    print("No server receive for "..type)
+    print("No server receive for " .. type)
   end
 end
 

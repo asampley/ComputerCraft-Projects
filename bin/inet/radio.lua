@@ -6,13 +6,13 @@
 local radio = require("/lib/inet/radio")
 local midi = require("/lib/midi")
 
-local args = {...}
+local args = { ... }
 
 local function broadcast(midiFile)
   -- load song
   local song = io.open(midiFile, "rb")
   if not song then
-    error("Unable to read "..midiFile)
+    error("Unable to read " .. midiFile)
     return
   end
 
@@ -22,22 +22,21 @@ local function broadcast(midiFile)
 
   midi.processHeader(
     song,
-    function(_, type, t, tpb)
-        tracks = t
-        ticks_per_beat = tpb
-    end,
-    true
+    function(_, _, t, tpb)
+      tracks = t
+      ticks_per_beat = tpb
+    end
   )
 
-  print("Playing "..tracks.." tracks in parallel")
-  print("Ticks per beat: "..ticks_per_beat)
+  print("Playing " .. tracks .. " tracks in parallel")
+  print("Ticks per beat: " .. ticks_per_beat)
 
-  function playTrack(i)
+  local playTrack = function(i)
     midi.processTrack(io.open(midiFile, "rb"), coroutine.yield, i)
   end
 
   local trackPlayers = {}
-  for i = 1,tracks do
+  for i = 1, tracks do
     trackPlayers[i] = {
       co = coroutine.create(function()
         playTrack(i)
@@ -46,7 +45,7 @@ local function broadcast(midiFile)
     }
   end
 
-  lastEpoch = os.epoch()
+  local lastEpoch = os.epoch()
 
   while #trackPlayers ~= 0 do
     local currEpoch = os.epoch()
@@ -55,7 +54,7 @@ local function broadcast(midiFile)
 
     lastEpoch = currEpoch
 
-    for _,tp in ipairs(trackPlayers) do
+    for _, tp in ipairs(trackPlayers) do
       tp.tick = tp.tick - deltaTick
 
       if coroutine.status(tp.co) ~= "dead" and tp.tick <= 0 then
@@ -96,7 +95,7 @@ local function broadcast(midiFile)
 
     sleep(0)
   end
---  parallel.waitForAll(table.unpack(trackPlayers))
+  --  parallel.waitForAll(table.unpack(trackPlayers))
 
   radio.broadcast.stopAll()
 end
@@ -104,12 +103,12 @@ end
 if fs.isDir(args[1]) then
   local files = fs.list(args[1])
 
-  for i,v in ipairs(files) do
-    local file = args[1].."/"..v
-    print("Playing "..i.."/"..#files..": "..file)
+  for i, v in ipairs(files) do
+    local file = args[1] .. "/" .. v
+    print("Playing " .. i .. "/" .. #files .. ": " .. file)
     broadcast(file)
   end
 else
-  print("Playing "..args[1])
+  print("Playing " .. args[1])
   broadcast(args[1])
 end

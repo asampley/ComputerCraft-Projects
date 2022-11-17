@@ -1,5 +1,5 @@
 -- loop program every x seconds
-args = {...}
+local args = { ... }
 
 if #args < 2
 then
@@ -8,16 +8,10 @@ then
 end
 
 
-period = tonumber(args[1])
-command = args[2]
+local period = tonumber(args[1])
+local command = args[2]
 
-for i = 3,#args
-do
-  arguments = arguments .. args[i]
-end
-
-while true
-do
-  shell.run(command, arguments)
+while true do
+  shell.run(command, table.unpack(args, 3))
   sleep(period)
 end

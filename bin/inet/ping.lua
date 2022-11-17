@@ -1,7 +1,7 @@
 local inet = require("/lib/inet")
 
 -- ping a host
-local args = {...}
+local args = { ... }
 
 if #args ~= 1 then
   error("Usage: ping <remoteid>")
@@ -13,7 +13,7 @@ inet.send(remote, "?", "ping")
 while true do
   local sender, message = inet.receive("ping")
   if sender == remote and message == "!" then
-    print("Recieved ping back from "..remote)
+    print("Recieved ping back from " .. remote)
     break
   end
 end

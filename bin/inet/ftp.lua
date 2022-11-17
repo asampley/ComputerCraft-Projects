@@ -38,14 +38,14 @@ end
 
 while operation == "get" or operation == "list" do
   local sender, message, proto = inet.receive()
-   
+
   if sender == remote and proto == ftp.PROTOCOL
   then
     if operation == "get" then
       if message.type == "file" then
         local path = message.path
         local contents = message.contents
-        if path == filePath then 
+        if path == filePath then
           if not fs.exists(savePath) then
             print("Writing file to " .. savePath)
             local file = fs.open(savePath, "w")
@@ -53,7 +53,7 @@ while operation == "get" or operation == "list" do
             file.close()
             print("done")
           else
-            error("File \"" .. savePath 
+            error("File \"" .. savePath
               .. "\" already exists"
             )
           end
@@ -73,7 +73,7 @@ while operation == "get" or operation == "list" do
       if message.type == "files" then
         local path = message.path
         local list = message.list
-        
+
         if path == filePath then
           for _,file in pairs(list) do
             print(file)

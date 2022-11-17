@@ -15,7 +15,7 @@ local fuelPath = "/etc/bore/fuel"
 
 local ignoreFile = fs.open(ignorePath, "r")
 if not ignoreFile then
-  error("Unable to read "..ignorePath)
+  error("Unable to read " .. ignorePath)
   exit()
 else
   -- add each block name to the ignore list
@@ -28,7 +28,7 @@ end
 
 local fuelFile = fs.open(fuelPath, "r")
 if not fuelFile then
-  error("Unable to read "..fuelPath)
+  error("Unable to read " .. fuelPath)
   exit()
 else
   -- add each item name to the fuel list
@@ -54,7 +54,7 @@ end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
   while not moveFunc() do
-    blockFound, block = inspectFunc()
+    local blockFound, block = inspectFunc()
     if blockFound and block.name == "minecraft:bedrock" then
       return false
     end
@@ -69,7 +69,7 @@ local stackI = -1
 m.transferToChest = function()
   move.digTo(chestPos)
 
-  for i = 2,16 do
+  for i = 2, 16 do
 
     turtle.select(i)
     -- don't transfer fuel unless we are full
@@ -82,14 +82,14 @@ end
 
 m.shouldFuel = function()
   return turtle.getFuelLevel() ~= "unlimited"
-    and turtle.getFuelLevel() < turtle.getFuelLimit() - 1000
+      and turtle.getFuelLevel() < turtle.getFuelLimit() - 1000
 end
 
 m.refuel = function()
   if turtle.getFuelLevel() == "unlimited"
   then return end
 
-  for i = 2,16 do
+  for i = 2, 16 do
     turtle.select(i)
     local item = turtle.getItemDetail()
 
@@ -109,7 +109,7 @@ end
 
 local function debug()
   print("DEBUG")
-  for _,node in ipairs(stack) do
+  for _, node in ipairs(stack) do
     print(node.pos)
   end
 end
@@ -120,11 +120,11 @@ m.enoughFuel = function()
 end
 
 local function init(position)
-  stack = {{
-    pos=position,
-    todo={-location.Y()},
-    shaft=true
-  }}
+  stack = { {
+    pos = position,
+    todo = { -location.Y() },
+    shaft = true
+  } }
   stackI = #stack
 end
 
@@ -133,22 +133,22 @@ local function expand(minPosition, maxPosition, shaft)
   local heading = location.getHeading()
 
   local node = {
-    pos=position,
-    todo={},
-    shaft=shaft
+    pos = position,
+    todo = {},
+    shaft = shaft
   }
 
-  local headings = {location.Y(), -location.Y()}
-  for i = 0,3 do
+  local headings = { location.Y(), -location.Y() }
+  for i = 0, 3 do
     heading = location.turnLeft(heading)
     table.insert(headings, heading)
   end
 
-  for _,heading in ipairs(headings) do
+  for _, heading in ipairs(headings) do
     local todo = position + heading
     if todo.x >= minPosition.x and todo.x <= maxPosition.x
-      and todo.y >= minPosition.y and todo.y <= maxPosition.y
-      and todo.z >= minPosition.z and todo.z <= maxPosition.z
+        and todo.y >= minPosition.y and todo.y <= maxPosition.y
+        and todo.z >= minPosition.z and todo.z <= maxPosition.z
     then
       table.insert(node.todo, heading)
     end
@@ -157,7 +157,6 @@ local function expand(minPosition, maxPosition, shaft)
   table.insert(stack, node)
   stackI = stackI + 1
 end
-
 
 m.go = function(position, depth, minPosition, maxPosition)
   init(position)
@@ -191,8 +190,8 @@ m.continue = function(depth, minPosition, maxPosition)
     -- exit criteria
     if not m.enoughFuel() then
       print("Must return before running out of fuel")
-      print("Fuel: "..turtle.getFuelLevel())
-      print("Blocks: "..#stack)
+      print("Fuel: " .. turtle.getFuelLevel())
+      print("Blocks: " .. #stack)
 
       m.retreat()
 
@@ -203,10 +202,10 @@ m.continue = function(depth, minPosition, maxPosition)
       m.retreat()
       m.transferToChest()
 
-      if not enoughFuel() then
+      if not m.enoughFuel() then
         print("Not enough fuel to make it there and back")
-        print("Fuel: "..turtle.getFuelLevel())
-        print("Blocks: "..#stack)
+        print("Fuel: " .. turtle.getFuelLevel())
+        print("Blocks: " .. #stack)
 
         return false
       end

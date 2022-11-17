@@ -10,40 +10,40 @@ local daemons = {}
 local noop = function() end
 local environment = {
   print = noop,
-  os = {pullEvent = os.pullEventRaw},
-  term = {write = noop},
+  os = { pullEvent = os.pullEventRaw },
+  term = { write = noop },
   require = require,
 }
-setmetatable(environment.os, {__index=os})
-setmetatable(environment.term, {__index=term})
+setmetatable(environment.os, { __index = os })
+setmetatable(environment.term, { __index = term })
 
 -- shamelessly stolen from /rom/programs/shell
-local function tokenise( ... )
-  local sLine = table.concat( { ... }, " " )
+local function tokenise(...)
+  local sLine = table.concat({ ... }, " ")
   local tWords = {}
   local bQuoted = false
-  for match in string.gmatch( sLine .. "\"", "(.-)\"" ) do
+  for match in string.gmatch(sLine .. "\"", "(.-)\"") do
     if bQuoted then
-      table.insert( tWords, match )
+      table.insert(tWords, match)
     else
-      for m in string.gmatch( match, "[^ \t]+" ) do
-        table.insert( tWords, m )
+      for m in string.gmatch(match, "[^ \t]+") do
+        table.insert(tWords, m)
       end
     end
     bQuoted = not bQuoted
   end
   return tWords
-end 
+end
 
 -- run all programs in background
 m.startup = function()
   print("Running daemons:")
 
   local funcs = {}
-  for name,daemon in pairs(daemons) do
+  for name, daemon in pairs(daemons) do
     if not daemon.disable then
       table.insert(funcs, daemon.f)
-      print("  "..name)
+      print("  " .. name)
     end
   end
 
@@ -65,7 +65,7 @@ end
 local function loadConfigs(relPath)
   local path = fs.combine(configPath, relPath)
 
-  for i,f in ipairs(fs.list(path)) do
+  for _, f in ipairs(fs.list(path)) do
 
     local fullPath = fs.combine(path, f)
 
@@ -73,7 +73,7 @@ local function loadConfigs(relPath)
     if fs.isDir(fullPath) then
       loadConfigs(fs.combine(relPath, f))
 
-    -- load this config
+      -- load this config
     else
       local filePath = fs.combine(relPath, f)
 
@@ -88,7 +88,7 @@ local function loadConfigs(relPath)
 
         -- check if command exists
         if not fs.exists(command) or fs.isDir(command) then
-          print("Unable to find \""..command.."\"")
+          print("Unable to find \"" .. command .. "\"")
         else
           daemons[filePath] = {
             status = "off",
@@ -103,13 +103,13 @@ local function loadConfigs(relPath)
               daemons[filePath].status = "off"
             end
           }
-  
+
           -- subsequent lines are options
           for line in config.readLine do
             if line == "reboot" or line == "disable" then
               daemons[filePath][line] = true
             else
-              print("Unrecognized option \""..line.."\" in "..fullpath)
+              print("Unrecognized option \"" .. line .. "\" in " .. fullPath)
             end
           end
         end

@@ -1,7 +1,7 @@
 local inet = require("/lib/inet")
 local igps = require("/lib/inet/igps")
 
-local args = {...}
+local args = { ... }
 
 if #args ~= 1 then
   error("Usage: igps <id>")
@@ -19,11 +19,11 @@ while true do
   if sender == id then
     if message.type == "here" then
       local position = vector.new(message.x, message.y, message.z)
-      print("Location: "..position:tostring())
+      print("Location: " .. position:tostring())
       break
     elseif message.type == "lost" then
       print("Unknown location")
       break
     end
   end
-end  
+end

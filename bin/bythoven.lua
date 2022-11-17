@@ -6,7 +6,7 @@ local speaker = require("/lib/speaker")
 -- time is optional and in seconds
 
 -- read arguments
-args = {...}
+local args = {...}
 if #args ~= 1 then
   print("Usage: bythoven <song>")
   return
@@ -34,7 +34,7 @@ for line in song.readLine do
     local pitch = note:match("[A-G#]+")
     local octave = note:match("[-0-9]+")
     local time = tonumber(parser())
-    
+
     if not pitch or not octave then
       print("Invalid line: "..line)
     else
@@ -44,7 +44,7 @@ for line in song.readLine do
         speaker.stopNote(pitch, octave)
       end
     end
-    
+
     if time then
       -- catch termination
       if not pcall(function() os.sleep(time) end)

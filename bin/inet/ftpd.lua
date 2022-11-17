@@ -1,16 +1,24 @@
 local inet = require("/lib/inet")
 local ftp = require("/lib/inet/ftp")
 
+--[[ returns a packet friendly directory
+  in the form of a list, of directories and files
+  within each inner directory is similarly packed
+]]
+local function packDir(path)
+  fs.list(path)
+end
+
 -- table for all receive related functions
 local recv = {}
 
-recv.any = function (sender, message)
+recv.any = function(sender, message)
   local type = message.type
 
   if recv[type] then
     recv[type](sender, message)
   else
-    print("No server receive for "..type)
+    print("No server receive for " .. type)
   end
 end
 
@@ -35,7 +43,7 @@ recv.put = function(sender, message)
   local path = message.path
   local contents = message.contents
   if fs.exists(path) then
-    error("File already exists: "..path)
+    error("File already exists: " .. path)
   else
     local file = fs.open(path, "w")
     file.write(contents)
@@ -49,20 +57,11 @@ recv.list = function(sender, message)
     local files = fs.list(path)
     ftp.send.files(sender, path, files)
   else
-    ftp.send.nodir(sender, path, nil)
+    ftp.send.nodir(sender, path)
   end
-end
-
-
---[[ returns a packet friendly directory
-  in the form of a list, of directories and files
-  within each inner directory is similarly packed
-]]
-function packDir(path)
-  fs.list(path)
 end
 
 while true do
   local sender, message = inet.receive(ftp.PROTOCOL)
   recv.any(sender, message)
-end  
+end

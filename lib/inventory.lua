@@ -11,7 +11,7 @@ API.
 
 Alternatively, for greater efficiency,
 one should call this manually, using
-scan to refresh the view of the 
+scan to refresh the view of the
 inventory.
 
 Some functionality does not require
@@ -53,7 +53,7 @@ end
 
 Listens for when the inventory of the
 turtle changes. Note, however, that
-this function never returns. It is 
+this function never returns. It is
 therefore recommended to run this
 function using the parallel API.
 
@@ -82,7 +82,7 @@ m.placeRefill = function(placeFunc, ...)
   if autoRefill and turtle.getItemCount(selected) == 1
   then
     local refillSlot = turtle.getSelectedSlot()
-    
+
     for slot = 1,16
     do
       if slot ~= refillSlot
@@ -97,7 +97,7 @@ m.placeRefill = function(placeFunc, ...)
       end
     end
   end
-  
+
   return placeFunc(arg)
 end
 

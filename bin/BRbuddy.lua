@@ -1,16 +1,17 @@
 local BR = require("/lib/BR")
+local stats = require("/lib/stats")
 
 while true do
   local reactorsActive = stats.trueCount(BR.allReactors.getActive())
   local reactorCount = #BR.allReactors.getConnected()
-  
+
   local turbinesActive = stats.trueCount(BR.allTurbines.getActive())
   local turbineCount = #BR.allTurbines.getConnected()
-  
+
   local fuelpertick_mBpertick = stats.sum(BR.allReactors.getFuelConsumedLastTick())
   local energypertick_kRFpertick = stats.sum(BR.allTurbines.getEnergyProducedLastTick()) / 1000
   local energyperfuel_kRFperB = energypertick_kRFpertick / fuelpertick_mBpertick * 1000
-  
+
   local maxturbinespeed_RPM = stats.max(BR.allTurbines.getRotorSpeed())
   local minturbinespeed_RPM = stats.min(BR.allTurbines.getRotorSpeed())
 
@@ -19,9 +20,9 @@ while true do
   -- Assumes 2B consumption on each turbine
   local bucketpertick_B = stats.sum(BR.allReactors.getEnergyProducedLastTick()) / 1000
   local maxbucketpertick_B = turbineCount * 2
-  
+
   term.clear()
-  term.setCursorPos(1,1)
+  term.setCursorPos(1, 1)
   print(string.format([[
 Reactors:
   Active: %d/%d
@@ -42,6 +43,6 @@ Overall:
     bucketpertick_B,
     maxbucketpertick_B,
     bucketpertick_B / maxbucketpertick_B * 100
-    ))
+  ))
   sleep(10)
 end

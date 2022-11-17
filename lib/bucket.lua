@@ -8,10 +8,10 @@ local fuel = {}
 -- load config
 local configPath = "/etc/bucket"
 local config = fs.open(configPath, "r")
-if not config then error("Unable to find list of fuels in "..configPath) end
+if not config then error("Unable to find list of fuels in " .. configPath) end
 for line in config.readLine do
   fuel[line] = true
-end 
+end
 
 -- try to take lava and refuel, and then move
 local function _bucket(finalFunc, placeFunc, inspectFunc, bucketSlot)
@@ -21,7 +21,7 @@ local function _bucket(finalFunc, placeFunc, inspectFunc, bucketSlot)
   -- select the slot with the bucket
   local slot = bucketSlot or defaultSlot
   turtle.select(slot)
-  
+
   -- try to grab lava, assumes an empty bucket
   -- may run into trouble if water is picked up
   local success, data = inspectFunc()
@@ -35,7 +35,7 @@ local function _bucket(finalFunc, placeFunc, inspectFunc, bucketSlot)
 
   -- reselect old slot
   turtle.select(slotOld)
-   
+
   -- now do final action
   return finalFunc()
 end
@@ -56,12 +56,12 @@ m.place = function(bucketSlot)
   return _bucket(turtle.place, turtle.place, turtle.inspect, bucketSlot)
 end
 
-m.placeUp = function(itemSlot, bucketSlot)
-  return _bucketPlace(turtle.placeUp, turtle.placeUp, turtle.inspectUp, bucketSlot)
+m.placeUp = function(bucketSlot)
+  return _bucket(turtle.placeUp, turtle.placeUp, turtle.inspectUp, bucketSlot)
 end
 
-m.placeDown = function(itemSlot, bucketSlot)
-  return _bucketPlace(turtle.placeDown, turtle.placeDown, turtle.inspectDown, bucketSlot)
+m.placeDown = function(bucketSlot)
+  return _bucket(turtle.placeDown, turtle.placeDown, turtle.inspectDown, bucketSlot)
 end
 
 return m

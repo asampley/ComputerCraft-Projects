@@ -22,15 +22,15 @@ local function inetBroadcast(message)
 end
 
 m.broadcast.play = function(key, velocity)
-  inetBroadcast({type="play", key=key, velocity=velocity})
+  inetBroadcast({ type = "play", key = key, velocity = velocity })
 end
 
 m.broadcast.stop = function(key, velocity)
-  inetBroadcast({type="stop", key=key, velocity=velocity})
+  inetBroadcast({ type = "stop", key = key, velocity = velocity })
 end
 
 m.broadcast.stopAll = function()
-  inetBroadcast({type="stopAll"})
+  inetBroadcast({ type = "stopAll" })
 end
 
 return m

@@ -2,12 +2,6 @@ local bore = require("/lib/bore")
 local location = require("/lib/location")
 local move = require("/lib/move")
 
--- step one, put chest in front of the turtle
--- this is where the turtle will put things not
---   from slot 1
-local depth
-local holes
-
 local args = {...}
 
 if #args ~= 3 then
@@ -17,12 +11,12 @@ if #args ~= 3 then
 end
 
 -- load arguments
-depth = tonumber(args[1])
-forward = tonumber(args[2])
-right = tonumber(args[3])
-if not depth then error("Depth must be an integer") end
-if not forward then error("Forward must be an integer") end
-if not right then error("Right must be an integer") end
+local depth = tonumber(args[1])
+  or error("depth must be an integer")
+local forward = tonumber(args[2])
+  or error("Forward must be an integer")
+local right = tonumber(args[3])
+  or error("Right must be an integer")
 
 -- record chest location
 local position = location.getPos()
@@ -41,13 +35,13 @@ local maxPosition = position + heading * forward + location.turnRight(heading * 
   ..X....X....X....X.
   S....X....X....X...
 --]]
-for hr = 0,right-1 do 
+for hr = 0,right-1 do
   for hf = 0,forward-1 do
     if (hf + 2 * hr) % 5 == 0 then
       -- run bore on new spot
       local top = position + heading * hf + location.turnRight(heading * hr)
       move.digTo(top)
-      
+
       -- ignore hole if it is topped with cobblestone
       local found, block = turtle.inspectDown()
       if found and block.name == "minecraft:cobblestone" then

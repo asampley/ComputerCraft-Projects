@@ -16,12 +16,12 @@ m.connectAllBigReactors = function()
     then
       if name:sub(13,19) == "Reactor"
       then
-        reactors[#reactors + 1] = peripheral.wrap(name)
+        m.reactors[#m.reactors + 1] = peripheral.wrap(name)
       elseif name:sub(13,19) == "Turbine"
       then
-        turbines[#turbines + 1] = peripheral.wrap(name)
+        m.turbines[#m.turbines + 1] = peripheral.wrap(name)
       end
-      
+
       print("Connected to " .. name)
     end
   end
@@ -41,7 +41,7 @@ local function forEachGen(funcName, table)
     local results = {}
     for _,item in pairs(table)
     do
-      results[#results + 1] = item[funcName](unpack(arg))
+      results[#results + 1] = item[funcName](...)
     end
     if #results > 0
     then
@@ -51,11 +51,11 @@ local function forEachGen(funcName, table)
 end
 
 local function forEachReactorGen(funcName)
-  return forEachGen(funcName, reactors)
+  return forEachGen(funcName, m.reactors)
 end
 
 local function forEachTurbineGen(funcName)
-  return forEachGen(funcName, turbines)
+  return forEachGen(funcName, m.turbines)
 end
 
 -- create all functions that BigReactors has,
@@ -65,20 +65,20 @@ end
 m.loadAllFunctions = function()
   -- get all reactor functions
   -- add functions to the "reactor" api
-  for fname, f in pairs(reactors[1])
+  for fname, f in pairs(m.reactors[1])
   do
     if type(f) == "function"
     then
-      allReactors[fname] = forEachReactorGen(fname)
+      m.allReactors[fname] = forEachReactorGen(fname)
     --  print("Loaded reactor function: " .. fname)
     end
   end
-  
-  for fname, f in pairs(turbines[1])
+
+  for fname, f in pairs(m.turbines[1])
   do
     if type(f) == "function"
     then
-      allTurbines[fname] = forEachTurbineGen(fname)
+      m.allTurbines[fname] = forEachTurbineGen(fname)
     --  print("Loaded turbine function: " .. fname)
     end
   end
@@ -93,19 +93,15 @@ end
 -- if this is the case, a table of results
 -- will be returned
 m.forEachReactor = function(f, ...)
-  local results = {}
-  for _,reactor in pairs(reactors)
-  do
-    f(reactor, unpack(arg))
+  for _,reactor in pairs(m.reactors) do
+    f(reactor, ...)
   end
 end
 
 -- same, for turbine
 m.forEachTurbine = function(f, ...)
-  local results = {}
-  for _,turbine in pairs(turbines)
-  do
-    f(turbine, unpack(arg))
+  for _,turbine in pairs(m.turbines) do
+    f(turbine, ...)
   end
 end
 

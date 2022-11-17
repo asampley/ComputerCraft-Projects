@@ -1,9 +1,9 @@
-lib m = {}
+local m = {}
 
 m.binaryHeap = {
   new = function()
     local heap = {}
-    setmetatable(heap, {__index=binaryHeap})
+    setmetatable(heap, {__index=m.binaryHeap})
     return heap
   end,
 
@@ -23,7 +23,7 @@ m.binaryHeap = {
       i = p
       p = heap.parent(i)
     end
-    
+
     return heap
   end,
 
@@ -35,10 +35,10 @@ m.binaryHeap = {
     -- bottom on top
     local value = heap[1]
     heap[1] = table.remove(heap)
-    
-    p = 1
-    c1, c2 = heap.children(p)
-    maxi = p
+
+    local p = 1
+    local c1, c2 = heap.children(p)
+    local maxi = p
 
     -- bubble down until there are no bigger children
     while true do
@@ -51,14 +51,14 @@ m.binaryHeap = {
       p = maxi
       c1, c2 = heap.children(p)
     end
-    
+
     return value
   end,
 
   parent = function(i)
     return math.floor(i / 2)
   end,
-  
+
   children = function(i)
     return 2 * i, 2 * i + 1
   end,
