@@ -64,10 +64,10 @@ parallel.waitForAny(
     end
   end,
   function()
-    local buffer = {}
-
     while true do
-      for tick = 1, 20 do
+      local buffer = {}
+
+      for tick = 1, 8 do
         synth.buffer(buffer, notes, (tick - 1) * 2400, tick * 2400)
         sleep(0)
       end
