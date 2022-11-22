@@ -1,34 +1,28 @@
 local inet = require("/lib/inet")
 local radio = require("/lib/inet/radio")
+local synth = require("/lib/synth")
 
 -- table for all receive related functions
 local recv = {}
 
 local speaker = peripheral.find("speaker")
 
-local noteMap = {}
+local notes = {}
+local wave
 
 local config = fs.open("/etc/radiod", "r")
 if config then
   for line in config.readLine do
-    if line:len() ~= 0 then
-      local lower, upper, instrument, octaveOffset = line:match("([0-9]+) ([0-9]+) ([^ ]+) ([+-]?[0-9])")
+    wave = synth[line]
 
-      if not lower then
-        error("Error parsing line of config: " .. line)
-      end
-
-      local lower, upper = tonumber(lower), tonumber(upper)
-      local octaveOffset = tonumber(octaveOffset) - math.floor(lower / 12)
-
-      for i = lower, upper do
-        noteMap[i] = {
-          instrument = instrument,
-          octaveOffset = octaveOffset
-        }
-      end
+    if not wave then
+      error("Error reading config, check the synth library for valid waves")
     end
   end
+end
+
+if not wave then
+  wave = synth.sine
 end
 
 recv.any = function(sender, message)
@@ -43,24 +37,45 @@ end
 
 recv.play = function(sender, message)
   -- offset pitch from midi standard to minecraft note blocks
-  local key = message.key + 6
+  local key = message.key
   local velocity = message.velocity
 
-  local map = noteMap[key]
-
-  if map then
-    key = (key + 12 * map.octaveOffset) % 24
-    speaker.playNote(map.instrument, velocity, key)
+  local hertz = 13.75 * 2 ^ ((key + 3) / 12)
+  if velocity == 0 then
+    notes[key] = nil
+  else
+    notes[key] = wave(hertz, velocity * 31, 0.9999)
   end
 end
 
-recv.stop = function(sender, message) end
+recv.stop = function(sender, message)
+  notes[message.key] = nil
+end
 
 recv.stopAll = function(sender, message)
   speaker.stop()
 end
 
-while true do
-  local sender, message = inet.receive(radio.PROTOCOL)
-  recv.any(sender, message)
-end
+parallel.waitForAny(
+  function()
+    while true do
+      local sender, message = inet.receive(radio.PROTOCOL)
+      recv.any(sender, message)
+    end
+  end,
+  function()
+    local buffer = {}
+
+    while true do
+      for tick = 1, 20 do
+        synth.buffer(buffer, notes, (tick - 1) * 2400, tick * 2400)
+        sleep(0)
+      end
+
+      while not speaker.playAudio(buffer) do
+        print("waiting for speaker")
+        os.pullEvent("speaker_audio_empty")
+      end
+    end
+  end
+)
