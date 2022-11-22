@@ -25,6 +25,8 @@ local function broadcast(midiFile)
     end
   )
 
+  sleep(4)
+
   radio.broadcast.stopAll()
 end
 
