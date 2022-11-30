@@ -5,8 +5,10 @@ local m = {}
 -- server program
 m.PROTOCOL = "radio"
 
--- table for all send related functions
+-- tables for all send related functions
 m.broadcast = {}
+m.loopback = {}
+m.send = {}
 
 --[[
   The following messages are defined
@@ -17,20 +19,46 @@ m.broadcast = {}
   {type="stopAll"}
 
 --]]
-local function inetBroadcast(message)
+local function broadcast(message)
   inet.broadcast(message, m.PROTOCOL)
 end
 
-m.broadcast.play = function(key, velocity)
-  inetBroadcast({ type = "play", key = key, velocity = velocity })
+local function send(recipient, message)
+  inet.send(recipient, message, m.PROTOCOL)
 end
 
-m.broadcast.stop = function(key, velocity)
-  inetBroadcast({ type = "stop", key = key, velocity = velocity })
+local function loopback(message)
+  inet.loopback(message, m.PROTOCOL)
 end
 
-m.broadcast.stopAll = function()
-  inetBroadcast({ type = "stopAll" })
+m.loopback.play = function(key, velocity)
+  loopback({ type = "play", key = key, velocity = velocity })
+end
+
+m.send.play = function(recipient, key, velocity)
+  send(recipient, { type = "play", key = key, velocity = velocity })
+end
+
+m.loopback.stop = function(recipient, key, velocity)
+  loopback({ type = "stop", key = key, velocity = velocity })
+end
+
+m.send.stop = function(recipient, key, velocity)
+  send(recipient, { type = "stop", key = key, velocity = velocity })
+end
+
+m.loopback.stopAll = function(recipient)
+  loopback({ type = "stopAll" })
+end
+
+m.send.stopAll = function(recipient)
+  send(recipient, { type = "stopAll" })
+end
+
+for k,v in pairs(m.send) do
+  m.broadcast[k] = function(...)
+    v(rednet.CHANNEL_BROADCAST, ...)
+  end
 end
 
 return m

@@ -14,13 +14,16 @@ local function broadcast(midiFile)
 
         if velocity > 0 then
           radio.broadcast.play(key, velocity)
+          radio.loopback.play(key, velocity)
         else
           radio.broadcast.stop(key, velocity)
+          radio.loopback.stop(key, velocity)
         end
       elseif type == "noteOff" then
         local channel, key, velocity = ...
 
         radio.broadcast.stop(key, velocity)
+        radio.loopback.stop(key, velocity)
       end
     end
   )
@@ -28,6 +31,7 @@ local function broadcast(midiFile)
   sleep(4)
 
   radio.broadcast.stopAll()
+  radio.loopback.stopAll()
 end
 
 if fs.isDir(args[1]) then

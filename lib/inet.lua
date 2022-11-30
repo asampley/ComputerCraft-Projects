@@ -15,6 +15,10 @@ m.host = rednet.host
 m.unhost = rednet.unhost
 m.lookup = rednet.lookup
 
+m.loopback = function(message, protocol)
+  os.queueEvent("rednet_message", os.getComputerID(), message, protocol)
+end
+
 -- load config
 local configPath = "/etc/inet"
 local config = fs.open(configPath, "r")
