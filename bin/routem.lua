@@ -21,21 +21,29 @@ while true do
     if not peripheral.hasType(pull, "inventory") then
       print("No inventory named \"" .. pull .. "\"")
     else
-      for slot, item in pairs(peripheral.call(pull, "list")) do
-        local push = config.push[item.name] or config.push.default
+      local ppull = peripheral.wrap(pull);
 
-        if push then
-          if not peripheral.hasType(push, "inventory") then
-            print("No inventory named \"" .. push .. "\"")
-          else
-            peripheral.call(pull, "pushItems", push, slot)
+      for slot, item in pairs(ppull.list()) do
+        local toPush = item.count
 
-            print("Pushed " .. item.count .. " " .. item.name .. " to " .. push)
+        for _, push in ipairs(config.push[item.name] or config.push.default) do
+          if push then
+            if not peripheral.hasType(push, "inventory") then
+              print("No inventory named \"" .. push .. "\"")
+            else
+              local pushed = ppull.pushItems(push, slot)
+
+              print(pushed .. " " .. item.name .. " from " .. pull .. " to " .. push)
+
+              toPush = toPush - pushed
+
+              if toPush == 0 then break end
+            end
           end
         end
       end
     end
   end
 
-  os.sleep(config.sleep)
+  sleep(config.sleep)
 end
