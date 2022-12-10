@@ -56,13 +56,24 @@ local function broadcast(midiFile)
       end
     )
   else
-    parallel.waitForAny(
-      function()
-        midi_play.play(
-          midiFile,
-          function(type, ...)
+    local co = coroutine.create(function()
+      midi_play.minecraftTicks(midiFile, coroutine.yield)
+    end)
+
+    repeat
+      local buffer = {}
+
+      for tick = 1, config.ticks or 8 do
+        if coroutine.status(co) == "dead" then break end
+
+        local result = table.pack(coroutine.resume(co))
+
+        if result[1] and result[2] then
+          for _, event in ipairs(result[2]) do
+            local type = event[1]
+
             if type == "noteOn" then
-              local channel, key, velocity = ...
+              local channel, key, velocity = table.unpack(event, 2)
 
               if velocity > 0 then
                 play(key, velocity)
@@ -70,27 +81,23 @@ local function broadcast(midiFile)
                 stop(key, velocity)
               end
             elseif type == "noteOff" then
-              local channel, key, velocity = ...
+              local channel, key, velocity = table.unpack(event, 2)
 
               stop(key, velocity)
             end
           end
-        )
-      end,
-      function()
-        while true do
-          local buffer = {}
 
-          for tick = 1, 8 do
-            synth.buffer(buffer, notes, (tick - 1) * 2400, tick * 2400)
-            sleep(0)
-          end
-
-          radio.broadcast.sample(buffer)
-          radio.loopback.sample(buffer)
+          synth.buffer(buffer, notes, (tick - 1) * 2400, tick * 2400)
         end
       end
-    )
+
+      if #buffer > 0 then
+        radio.broadcast.sample(buffer)
+        radio.loopback.sample(buffer)
+      end
+
+      sleep(0.05 * (config.ticks or 8))
+    until coroutine.status(co) == "dead"
   end
 
   sleep(4)
