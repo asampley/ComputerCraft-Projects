@@ -1,5 +1,5 @@
 return {
-  mode = "wave",
-  wave = "sine",
-  ticks = "8",
+  mode = "midi",
+  --wave = "sine",
+  --ticks = "8",
 }
