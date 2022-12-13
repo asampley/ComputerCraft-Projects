@@ -5,7 +5,6 @@ local m = {}
 -- cache functions in case these global functions are overwritten with these versions
 local require = require
 local loadfile = loadfile
-local run = os.run
 
 m.fetch = function(file)
   local response = http.get({ url = baseUrl .. file, binary = true })
