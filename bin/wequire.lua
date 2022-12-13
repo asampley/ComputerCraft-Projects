@@ -7,6 +7,5 @@ local args = {...}
 
 require = wequire.require
 loadfile = wequire.loadfile
-os.run = wequire.run
 
 wequire.run(_ENV, args[1], table.unpack(args, 2))

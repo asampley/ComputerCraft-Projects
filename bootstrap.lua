@@ -8,4 +8,11 @@ if response and response.getResponseCode() == 200 then
 end
 
 local wequire = require("/lib/wequire")
-wequire.fetch("/bin/wequire.lua")
+
+for _, f in ipairs({"/bin/wequire.lua", "/startup"}) do
+  pcall(wequire.fetch, f)
+end
+
+for _, f in ipairs({"/startup"}) do
+  pcall(wequire.run, _ENV, f)
+end
