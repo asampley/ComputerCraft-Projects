@@ -1,0 +1,3 @@
+return {
+  ["minecraft:coal"] = true,
+}

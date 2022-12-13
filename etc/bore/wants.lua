@@ -1,0 +1,21 @@
+return {
+  default = true,
+
+  ["minecraft:bedrock"] = false,
+  ["minecraft:chest"] = false,
+  ["minecraft:cobblestone"] = false,
+  ["minecraft:dirt"] = false,
+  ["minecraft:fence"] = false,
+  ["minecraft:flowing_lava"] = false,
+  ["minecraft:flowing_water"] = false,
+  ["minecraft:grass"] = false,
+  ["minecraft:grass_block"] = false,
+  ["minecraft:gravel"] = false,
+  ["minecraft:lava"] = false,
+  ["minecraft:planks"] = false,
+  ["minecraft:sand"] = false,
+  ["minecraft:sandstone"] = false,
+  ["minecraft:stone"] = false,
+  ["minecraft:torch"] = false,
+  ["minecraft:water"] = false,
+}

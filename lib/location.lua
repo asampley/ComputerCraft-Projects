@@ -1,4 +1,4 @@
-if not turtle then return end
+if not turtle then error("Missing turtle library") end
 
 local m = {}
 

@@ -3,15 +3,7 @@ local m = {}
 local defaultSlot = 1
 
 -- list of fuels to bucket up
-local fuel = {}
-
--- load config
-local configPath = "/etc/bucket"
-local config = fs.open(configPath, "r")
-if not config then error("Unable to find list of fuels in " .. configPath) end
-for line in config.readLine do
-  fuel[line] = true
-end
+local fuel = require("/etc/bucket")
 
 -- try to take lava and refuel, and then move
 local function _bucket(finalFunc, placeFunc, inspectFunc, bucketSlot)

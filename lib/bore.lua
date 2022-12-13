@@ -5,39 +5,9 @@ local move = require("/lib/move")
 
 local m = {}
 
--- configuration tables
-local ignore = {}
-local fuel = {}
-
--- load config file to determine which blocks to ignore
-local ignorePath = "/etc/bore/ignore"
-local fuelPath = "/etc/bore/fuel"
-
-local ignoreFile = fs.open(ignorePath, "r")
-if not ignoreFile then
-  error("Unable to read " .. ignorePath)
-  exit()
-else
-  -- add each block name to the ignore list
-  for line in ignoreFile.readLine do
-    if line:len() ~= 0 then
-      ignore[line] = true
-    end
-  end
-end
-
-local fuelFile = fs.open(fuelPath, "r")
-if not fuelFile then
-  error("Unable to read " .. fuelPath)
-  exit()
-else
-  -- add each item name to the fuel list
-  for line in fuelFile.readLine do
-    if line:len() ~= 0 then
-      fuel[line] = true
-    end
-  end
-end
+-- load config files to determine blocks to search for and items to refuel with
+local wants = require("/etc/bore/wants")
+local fuel = require("/etc/bore/fuel")
 
 -- record chest location
 local chestPos = nil
@@ -49,7 +19,7 @@ end
 -- check if block is wanted
 local function isDesired(inspectFunc)
   local found, block = inspectFunc()
-  return found and not ignore[block.name]
+  return found and wants[block.name] or wants.default
 end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
