@@ -6,9 +6,7 @@ local wequire = require("/lib/wequire")
 local args = {...}
 
 require = wequire.require
+loadfile = wequire.loadfile
+os.run = wequire.run
 
-local run = wequire.loadfile(args[1])
-
-setfenv(run, _ENV)
-
-run(table.unpack(args, 2))
+wequire.run(_ENV, args[1], table.unpack(args, 2))

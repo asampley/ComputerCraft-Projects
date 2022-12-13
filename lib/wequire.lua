@@ -2,10 +2,12 @@ local baseUrl = "https://raw.githubusercontent.com/asampley/ComputerCraft-Projec
 
 local m = {}
 
--- cache require in case this function is used to override it
+-- cache functions in case these global functions are overwritten with these versions
 local require = require
+local loadfile = loadfile
+local run = os.run
 
-local fetch = function(file)
+m.fetch = function(file)
   local response = http.get({ url = baseUrl .. file, binary = true })
 
   if response and response.getResponseCode() == 200 then
@@ -31,7 +33,7 @@ m.require = function(file)
   for search in package.path:gmatch("[^;]+") do
     local f = search:gsub("?", file)
 
-    if fetch(f) then
+    if m.fetch(f) then
       return require(file)
     end
   end
@@ -61,12 +63,20 @@ m.loadfile = function(file)
   end
 
   for _, fet in ipairs(fetchList) do
-    if fetch(fet) then
+    if m.fetch(fet) then
       return loadfile(fet)
     end
   end
 
   error("Unable to find file locally or online")
+end
+
+m.run = function(environment, file, ...)
+  local r = m.loadfile(file)
+
+  setfenv(r, environment)
+
+  r(...)
 end
 
 return m
