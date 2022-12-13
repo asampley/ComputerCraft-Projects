@@ -9,10 +9,10 @@ end
 
 local wequire = require("/lib/wequire")
 
-for _, f in ipairs({"/bin/wequire.lua", "/startup"}) do
+for _, f in ipairs({"/bin/wequire.lua"}) do
   pcall(wequire.fetch, f)
 end
 
 for _, f in ipairs({"/startup"}) do
-  pcall(wequire.run, _ENV, f)
+  pcall(wequire.run, _ENV, "/bin/wequire.lua", f)
 end
