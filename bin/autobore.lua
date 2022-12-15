@@ -23,10 +23,9 @@ local position = location.getPos()
 local heading = location.getHeading()
 
 -- create min and max positions
-local min = position
+local min = position + vector.new(0, -math.huge, 0)
 local max = position + heading * forward + location.turnRight(heading * right)
 
-min.y = -math.huge
 max.y = math.huge
 
 for _, i in ipairs({ "x", "y", "z" }) do
