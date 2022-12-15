@@ -10,7 +10,11 @@ local wants = require("/etc/bore/wants")
 local fuel = require("/etc/bore/fuel")
 
 -- record chest location
-local start
+local chestPos
+
+m.setChest = function(position)
+  chestPos = position
+end
 
 -- check if block is wanted
 local function isDesired(inspectFunc)
@@ -56,10 +60,10 @@ local stackI = -1
 local todo = {}
 
 m.transferToChest = function()
-  move.digTo(start)
+  move.digTo(chestPos)
 
   if not peripheral.hasType("top", "inventory") then
-    error("Block above start is not an inventory")
+    error("Block above chestPos is not an inventory")
   end
 
   local bucketSlot = bucket.find()
@@ -114,8 +118,6 @@ m.enoughFuel = function()
 end
 
 local function init(position)
-  start = location.getPos()
-
   stack = { {
     pos = position,
     shaft = true
@@ -164,6 +166,11 @@ m.go = function(position, depth, minPosition, maxPosition)
 end
 
 m.continue = function(depth, minPosition, maxPosition)
+  if not chestPos then
+    print("Unable to run without specifying the chest location")
+    return false
+  end
+
   while true do
     -- if we find something this round, switch to true
     local found = false
