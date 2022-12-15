@@ -34,7 +34,7 @@ end
 local function _bucket(finalFunc, placeFunc, inspectFunc)
   m.find()
 
-  if bucketSlot ~= 0 then
+  if bucketSlot and bucketSlot ~= 0 then
     -- save previous slot to reselect
     local slotOld = turtle.getSelectedSlot()
 

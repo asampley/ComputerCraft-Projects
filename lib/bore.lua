@@ -35,8 +35,25 @@ local function bruteDig(moveFunc, digFunc, inspectFunc)
   return true
 end
 
+local function orderedHeadings()
+  local heading = location.getHeading()
+
+  local headings = { heading }
+
+  for _ = 1, 3 do
+    heading = location.turnLeft(heading)
+    table.insert(headings, heading)
+  end
+
+  table.insert(headings, location.Y())
+  table.insert(headings, -location.Y())
+
+  return headings
+end
+
 local stack = {}
 local stackI = -1
+local todo = {}
 
 m.transferToChest = function()
   move.digTo(start)
@@ -72,10 +89,8 @@ m.refuel = function()
     turtle.select(i)
     local item = turtle.getItemDetail()
 
-    if item then print(item.name) end
-    if item then print(fuel[item.name]) end
-
     while m.shouldFuel() and item and fuel[item.name] do
+      print("Refueling with " .. item.name)
       turtle.refuel()
       item = turtle.getItemDetail()
     end
@@ -103,36 +118,30 @@ local function init(position)
 
   stack = { {
     pos = position,
-    todo = { -location.Y() },
     shaft = true
   } }
+
+  todo[tostring(position - location.Y())] = true
 
   stackI = #stack
 end
 
 local function expand(minPosition, maxPosition, shaft)
   local position = location.getPos()
-  local heading = location.getHeading()
 
   local node = {
     pos = position,
-    todo = {},
     shaft = shaft
   }
 
-  local headings = { location.Y(), -location.Y() }
-  for i = 0, 3 do
-    heading = location.turnLeft(heading)
-    table.insert(headings, heading)
-  end
-
-  for _, heading in ipairs(headings) do
-    local todo = position + heading
-    if todo.x >= minPosition.x and todo.x <= maxPosition.x
-        and todo.y >= minPosition.y and todo.y <= maxPosition.y
-        and todo.z >= minPosition.z and todo.z <= maxPosition.z
+  for _, heading in ipairs(orderedHeadings()) do
+    local t = position + heading
+    if todo[tostring(t)] == nil
+        and t.x >= minPosition.x and t.x <= maxPosition.x
+        and t.y >= minPosition.y and t.y <= maxPosition.y
+        and t.z >= minPosition.z and t.z <= maxPosition.z
     then
-      table.insert(node.todo, heading)
+      todo[tostring(t)] = true
     end
   end
 
@@ -190,44 +199,52 @@ m.continue = function(depth, minPosition, maxPosition)
       advance()
     end
 
-    local headings = stack[#stack].todo
     -- check for useful block in all flat directions
-    for h in function() return table.remove(headings) end do
-      -- set proper inspect function
-      local inspect = nil
-      local movement = nil
-      local dig = nil
+    for _, h in ipairs(orderedHeadings()) do
+      local next = tostring(stack[#stack].pos + h)
 
-      if h.y == 1 then
-        inspect = turtle.inspectUp
-        movement = bucket.up
-        dig = turtle.digUp
-      elseif h.y == -1 then
-        inspect = turtle.inspectDown
-        movement = bucket.down
-        dig = turtle.digDown
-      else
-        inspect = turtle.inspect
-        movement = bucket.forward
-        dig = turtle.dig
-        move.turnTo(h)
-      end
+      if todo[next] then
+        todo[next] = false
 
-      if isDesired(inspect) then
-        -- push new position onto stack, and continue
-        bruteDig(movement, dig, inspect)
-        expand(minPosition, maxPosition)
+        -- set proper inspect function
+        local inspect = nil
+        local movement = nil
+        local dig = nil
 
-        -- we need to continue the main loop when we
-        -- push to the stack
-        found = true
-        break
+        if h.y == 1 then
+          inspect = turtle.inspectUp
+          movement = bucket.up
+          dig = turtle.digUp
+        elseif h.y == -1 then
+          inspect = turtle.inspectDown
+          movement = bucket.down
+          dig = turtle.digDown
+        else
+          inspect = turtle.inspect
+          movement = bucket.forward
+          dig = turtle.dig
+          move.turnTo(h)
+        end
+
+        if isDesired(inspect) then
+          -- push new position onto stack, and continue
+          bruteDig(movement, dig, inspect)
+          expand(minPosition, maxPosition)
+
+          -- we need to continue the main loop when we
+          -- push to the stack
+          found = true
+          break
+        end
       end
     end
 
     -- if we find nothing valuable on all headings
     if not found then
       if stack[#stack].shaft then
+        -- clear todo list to save space
+        todo = {}
+
         if #stack >= depth + 1 then
           -- break if we reach max depth
           break
