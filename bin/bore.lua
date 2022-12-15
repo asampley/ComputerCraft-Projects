@@ -23,8 +23,14 @@ if not maxZ then error("Max Z must be an integer") end
 local position = location.getPos()
 local heading = location.getHeading()
 
-local minPosition = vector.new(minX, -math.huge, minZ) + position
-local maxPosition = vector.new(maxX, math.huge, maxZ) + position
+local min = position + heading * minZ + location.turnRight(heading * minX)
+local max = position + heading * maxZ + location.turnRight(heading * maxX)
+
+min.y = -math.huge
+
+for _, i in ipairs({ "x", "y", "z" }) do
+  min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
+end
 
 bore.setChest(position)
-bore.go(location.getPos(), depth, minPosition, maxPosition)
+bore.go(location.getPos(), depth, min, max)

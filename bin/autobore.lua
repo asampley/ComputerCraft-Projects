@@ -24,8 +24,12 @@ local heading = location.getHeading()
 bore.setChest(position)
 
 -- create min and max positions
-local minPosition = vector.new(0, -math.huge, 0) + position
-local maxPosition = position + heading * forward + location.turnRight(heading * right)
+local min = position + vector.new(0, -math.huge, 0)
+local max = position + heading * forward + location.turnRight(heading * right)
+
+for _, i in ipairs({ "x", "y", "z" }) do
+  min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
+end
 
 --[[ Tile holes like this:
   X....X....X....X...
@@ -47,7 +51,7 @@ for hr = 0,right-1 do
       if found and block.name == "minecraft:cobblestone" then
         print("Skipping ("..hf..","..hr..")")
       else
-        bore.go(position + heading * hf + location.turnRight(heading * hr), depth, minPosition, maxPosition)
+        bore.go(position + heading * hf + location.turnRight(heading * hr), depth, min, max)
       end
     end
   end

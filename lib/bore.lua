@@ -19,7 +19,13 @@ end
 -- check if block is wanted
 local function isDesired(inspectFunc)
   local found, block = inspectFunc()
-  return found and wants[block.name] or wants.default
+  local want = wants[block.name]
+
+  if want == nil then
+    want = wants.default
+  end
+
+  return found and want
 end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
