@@ -10,11 +10,7 @@ local wants = require("/etc/bore/wants")
 local fuel = require("/etc/bore/fuel")
 
 -- record chest location
-local chestPos = nil
-
-m.setChest = function(position)
-  chestPos = position
-end
+local start
 
 -- check if block is wanted
 local function isDesired(inspectFunc)
@@ -43,15 +39,22 @@ local stack = {}
 local stackI = -1
 
 m.transferToChest = function()
-  move.digTo(chestPos)
+  move.digTo(start)
 
-  for i = 2, 16 do
+  if not peripheral.hasType("top", "inventory") then
+    error("Block above start is not an inventory")
+  end
 
-    turtle.select(i)
-    -- don't transfer fuel unless we are full
-    local item = turtle.getItemDetail()
-    if not m.shouldFuel() or not item or not fuel[item.name] then
-      turtle.dropUp()
+  local bucketSlot = bucket.find()
+
+  for i = 1, 16 do
+    if i ~= bucketSlot then
+      turtle.select(i)
+      -- don't transfer fuel unless we are full
+      local item = turtle.getItemDetail()
+      if not m.shouldFuel() or not item or not fuel[item.name] then
+        turtle.dropUp()
+      end
     end
   end
 end
@@ -65,7 +68,7 @@ m.refuel = function()
   if turtle.getFuelLevel() == "unlimited"
   then return end
 
-  for i = 2, 16 do
+  for i = 1, 16 do
     turtle.select(i)
     local item = turtle.getItemDetail()
 
@@ -96,11 +99,14 @@ m.enoughFuel = function()
 end
 
 local function init(position)
+  start = location.getPos()
+
   stack = { {
     pos = position,
     todo = { -location.Y() },
     shaft = true
   } }
+
   stackI = #stack
 end
 
@@ -149,11 +155,6 @@ m.go = function(position, depth, minPosition, maxPosition)
 end
 
 m.continue = function(depth, minPosition, maxPosition)
-  if not chestPos then
-    print("Unable to run without specifying the chest location")
-    return false
-  end
-
   while true do
     -- if we find something this round, switch to true
     local found = false

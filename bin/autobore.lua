@@ -21,7 +21,6 @@ local right = tonumber(args[3])
 -- record chest location
 local position = location.getPos()
 local heading = location.getHeading()
-bore.setChest(position)
 
 -- create min and max positions
 local min = position + vector.new(0, -math.huge, 0)

@@ -32,5 +32,4 @@ for _, i in ipairs({ "x", "y", "z" }) do
   min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
 end
 
-bore.setChest(position)
 bore.go(location.getPos(), depth, min, max)
