@@ -27,6 +27,7 @@ local min = position + heading * minZ + location.turnRight(heading * minX)
 local max = position + heading * maxZ + location.turnRight(heading * maxX)
 
 min.y = -math.huge
+max.y = math.huge
 
 for _, i in ipairs({ "x", "y", "z" }) do
   min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
