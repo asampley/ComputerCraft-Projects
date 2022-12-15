@@ -17,15 +17,9 @@ m.setChest = function(position)
 end
 
 -- check if block is wanted
-local function isDesired(inspectFunc)
+m.wanted = function(inspectFunc)
   local found, block = inspectFunc()
-  local want = wants[block.name]
-
-  if want == nil then
-    want = wants.default
-  end
-
-  return found and want
+  return found and wants(block)
 end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
@@ -233,7 +227,7 @@ m.continue = function(depth, minPosition, maxPosition)
           move.turnTo(h)
         end
 
-        if isDesired(inspect) then
+        if m.wanted(inspect) then
           -- push new position onto stack, and continue
           bruteDig(movement, dig, inspect)
           expand(minPosition, maxPosition)
