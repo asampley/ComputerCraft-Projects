@@ -1,4 +1,4 @@
-local baseUrl = "https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/"
+-- local baseUrl = should be injected by /bootstrap.lua
 
 local m = {}
 
