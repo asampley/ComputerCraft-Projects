@@ -109,6 +109,7 @@ end
 
 -- Is there enough fuel for forward and backward trip
 m.enoughFuel = function()
+  if turtle.getFuelLevel() == "unlimited" then return true end
   return turtle.getFuelLevel() > #stack + #stack - stackI + 2
 end
 
