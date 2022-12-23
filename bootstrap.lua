@@ -24,3 +24,6 @@ end
 for _, f in ipairs({"/startup"}) do
   pcall(wequire.run, _ENV, "/bin/wequire.lua", f)
 end
+
+-- Grab werun as well for devs
+wequire.fetch("/bin/werun.lua")

@@ -25,6 +25,9 @@ m.fetch = function(file)
 end
 
 m.require = function(file)
+  
+  if _ENV.isWerun then fs.delete(file..".lua") end
+
   local ok, val = pcall(require, file)
 
   if ok then return val end
@@ -52,6 +55,10 @@ m.loadfile = function(file)
   for p in shell.path():gmatch("[^:]+") do
     for _, pp in ipairs({ file, file .. ".lua"}) do
       local ppp = p .. "/" .. pp
+
+      if _ENV.isWerun and string.sub(ppp, 1, 5) ~= "/rom/" then
+        fs.delete(ppp)
+      end
 
       f = loadfile(ppp)
 
