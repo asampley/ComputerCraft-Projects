@@ -28,6 +28,10 @@ m.filter = {
 -- The first filter that returns true returns
 -- the corresponding value of map
 m.map = function(block, filters)
+  if not block.tag then
+    -- items in inventory don't have metadata other than name, so fake the rest
+    block.tags = { [block.name] = true }
+  end
   for _, v in ipairs(filters) do
     local map = v[1]
     local filter = v[2]
