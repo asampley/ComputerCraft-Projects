@@ -4,6 +4,7 @@ local path = require("/lib/path")
 local bore = require("/lib/bore")
 local inventory = require("/lib/inventory")
 local bucket = require("/lib/bucket")
+local wants = require("/etc/bore/wants")
 
 local args = {...}
 
@@ -28,6 +29,16 @@ forward = forward - forward / math.abs(forward)
 right = right - right / math.abs(right)
 local toPos = homePos + vector.new(forward, -depth + 1, right)
 
+local digAndKeepOrToss = function(direction)
+  if not turtle["dig"..direction]() then return end -- Nothing to dig
+  local recentSlot = inventory.getLastSlotWithItem()
+  if recentSlot == bucket.find() then return end -- Don't drop the bucket
+  if recentSlot == 0 then return end -- Nothing to 
+  if wants(turtle.getItemDetail(recentSlot)) then return end -- We want it
+  -- Else drop it
+  inventory.dropLastStack()
+end
+
 bore.setChest(homePos)
 
 path.solidRectangle(toPos, function (direction)
@@ -35,12 +46,7 @@ path.solidRectangle(toPos, function (direction)
   bucket["place"..direction]()
   turtle.getFuelLevel()
 
-  -- inspect + dig
-  local wanted = bore.wanted(turtle["inspect"..direction])
-  turtle["dig"..direction]()
-  if not wanted then
-    inventory.dropLastStack()
-  end
+  digAndKeepOrToss(direction)
 
   -- if we are low on fuel or inventory is full
   if not bore.enoughFuelToGetTo(homePos) or not inventory.freeSlot() then
