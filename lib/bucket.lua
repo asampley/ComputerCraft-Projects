@@ -1,29 +1,22 @@
 local m = {}
 
 -- 0 for no bucket, nil for not searched
-local bucketSlot
+local bucketSlot = nil
 
 -- list of fuels to bucket up
 local fuel = require("/lib/config").load("bucket")
 
+-- Assumes the bucket does not change slot within a program's running
 m.find = function()
-  if bucketSlot ~= 0 then
-    local item = turtle.getItemDetail(bucketSlot)
-
-    if item and item.name == "minecraft:bucket" then
-      return bucketSlot
-    end
-  end
-
-  bucketSlot = 0
-
-  for i = 1, 16 do
-    item = turtle.getItemDetail(i)
-
-    if item and item.name == "minecraft:bucket" then
-      bucketSlot = i
-
-      break
+  if bucketSlot == nil then
+    for i = 1, 16 do
+      item = turtle.getItemDetail(i)
+  
+      if item and item.name == "minecraft:bucket" then
+        bucketSlot = i
+  
+        break
+      end
     end
   end
 
