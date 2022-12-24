@@ -113,6 +113,12 @@ m.enoughFuel = function()
   return turtle.getFuelLevel() > #stack + #stack - stackI + 2
 end
 
+m.enoughFuelToGetTo = function(position)
+  if turtle.getFuelLevel() == "unlimited" then return true end
+  local path = position - location.getPos()
+  return turtle.getFuelLevel() > math.abs(path.x) + math.abs(path.y) + math.abs(path.z) + 2
+end
+
 local function init(position)
   stack = { {
     pos = position,
