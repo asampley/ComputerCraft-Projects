@@ -16,8 +16,10 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
 
   -- Rotate the Turtle's heading so that it has to move forward and right
   -- Update the bounds to reflect this
-  if zChange > 0 and xChange > 0 then
+  print("xChange "..xChange.." zChange "..zChange)
+  if xChange >= 0 and zChange >= 0 then
     -- both pos
+    print("both pos")
     move.turnTo(vector.new(1, 0, 0))
   elseif zChange < 0 and xChange < 0 then
     -- both neg
@@ -36,6 +38,8 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
   end
   xChange = math.abs(xChange)
   zChange = math.abs(zChange)
+  local h = location.getHeading()
+  print("heading"..h.x..","..h.z.." xChange "..xChange.." zChange "..zChange)
 
   local x = 0
   local z = 0
@@ -124,10 +128,11 @@ m.solidRectangle = function(toPos, preMoveFunc)
       else
         zto = startPos.z
       end
-
+print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
       -- Move to opposite corner
       m.horizontalLayer(xto, zto, preMoveFunc)
       currentPosition = location.getPos()
+-- print("done to "..currentPosition.x..","..currentPosition.z)
       if y < yChange then
         moveVertical()
       end
