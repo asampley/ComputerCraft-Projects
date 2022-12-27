@@ -16,10 +16,8 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
 
   -- Rotate the Turtle's heading so that it has to move forward and right
   -- Update the bounds to reflect this
-  print("xChange "..xChange.." zChange "..zChange)
   if xChange >= 0 and zChange >= 0 then
     -- both pos
-    print("both pos")
     move.turnTo(vector.new(1, 0, 0))
   elseif zChange < 0 and xChange < 0 then
     -- both neg
@@ -38,8 +36,6 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
   end
   xChange = math.abs(xChange)
   zChange = math.abs(zChange)
-  local h = location.getHeading()
-  print("heading"..h.x..","..h.z.." xChange "..xChange.." zChange "..zChange)
 
   local x = 0
   local z = 0
@@ -94,54 +90,43 @@ m.solidRectangle = function(toPos, preMoveFunc)
   -- Figure out how many blocks we have to move vertically
   -- and create an fn to move vertically
   local yChange = toPos.y - location.getPos().y
-  local direction
+  local upOrDown
   if yChange < 0 then
-    direction = "Down"
+    upOrDown = "Down"
   else
-    direction = "Up"
-  end
-  local moveVertical = function ()
-    if not preMoveFunc(direction) then
-      error("preMoveFunc returned false")
-    end
-    if not turtle[string.lower(direction)]() then
-      error("Couldn't move "..direction)
-    end
+    upOrDown = "Up"
   end
   yChange = math.abs(yChange)
 
-  local success, error = pcall(function()
-    -- Start cutting
-    local y = 0
-    while y <= yChange do
-      -- Choose the coordinate that is opposite to the current corner
-      local xto
-      local zto
-      local currentPosition = location.getPos()
-      if currentPosition.x == startPos.x then
-        xto = toPos.x
-      else
-        xto = startPos.x
-      end
-      if currentPosition.z == startPos.z then
-        zto = toPos.z
-      else
-        zto = startPos.z
-      end
-print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
-      -- Move to opposite corner
-      m.horizontalLayer(xto, zto, preMoveFunc)
-      currentPosition = location.getPos()
--- print("done to "..currentPosition.x..","..currentPosition.z)
-      if y < yChange then
-        moveVertical()
-      end
-      y = y + 1
+  -- Start cutting
+  local y = 0
+  while y <= yChange do
+    -- Choose the coordinate that is opposite to the current corner
+    local xto
+    local zto
+    local currentPosition = location.getPos()
+    if currentPosition.x == startPos.x then
+      xto = toPos.x
+    else
+      xto = startPos.x
     end
-  end)
-
-  if error then print(error) end
-  return success
+    if currentPosition.z == startPos.z then
+      zto = toPos.z
+    else
+      zto = startPos.z
+    end
+-- print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
+    -- Move to opposite corner
+    m.horizontalLayer(xto, zto, preMoveFunc)
+    currentPosition = location.getPos()
+    if y < yChange then
+      if not preMoveFunc(upOrDown) or not turtle[string.lower(upOrDown)]() then 
+        -- print("Couldn't move "..upOrDown)
+        break
+      end
+    end
+    y = y + 1
+  end
   
 end
 

@@ -2,6 +2,7 @@ local bucket = require("/lib/bucket")
 local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
+local path = require("/lib/path")
 
 local m = {}
 
@@ -23,12 +24,14 @@ m.wanted = function(inspectFunc)
   return found and wants(block)
 end
 
+m.isBedrock = function (inspectFunc)
+  local blockFound, block = inspectFunc()
+  return blockFound and block.name == "minecraft:bedrock"
+end
+
 local function bruteDig(moveFunc, digFunc, inspectFunc)
   while not moveFunc() do
-    local blockFound, block = inspectFunc()
-    if blockFound and block.name == "minecraft:bedrock" then
-      return false
-    end
+    if m.isBedrock(inspectFunc) then return false end
     digFunc()
   end
   return true
@@ -295,6 +298,123 @@ m.advance = function()
   end
 
   return true
+end
+
+-- direction is "" for forward, "Down", or "Up"
+-- Will attempt to pick up lava and refuel, then
+-- dig the space in front, check the inventory item against
+-- wants, and keep or toss it
+m.digAndKeepOrToss = function(direction, digOnlyWanted)
+  bucket["place"..direction]() -- Do  any lava refueling
+  if digOnlyWanted and not m.wanted(turtle["inspect"..direction]) then return "NO_DIG" end
+  if not turtle["dig"..direction]() then return "NO_DIG" end -- Nothing to dig
+  local recentSlot = inventory.getLastSlotWithItem()
+  if recentSlot == bucket.find() then return end -- Don't drop the bucket
+  if recentSlot == 0 then return end -- Nothing to 
+  if wants(turtle.getItemDetail(recentSlot)) then return end -- We want it
+  -- Else drop it
+  inventory.dropLastStack()
+end
+
+-- Checks if we need to go home, if we do, it will try to return to the same
+-- position and will return true, else returns false (preferably from homePos)
+m.fuelAndInventoryCheck = function(homePos, homeHeading)
+  -- if we are low on fuel or inventory is full
+  if not m.enoughFuelToGetTo(homePos) or not inventory.freeSlot() then
+    print("not enough fuel or inventory is full")
+    local digPos = location.getPos()
+    local digHeading = location.getHeading()  
+    
+    -- Go home, cleanup, then head back out
+    move.digTo(homePos, "yzx")
+    move.turnTo(homeHeading)
+    if not m.enoughFuelToGetTo(digPos * 2) then
+      print("Not enough fuel to dig and get home")
+      return false
+    end
+    m.transferToChest()
+    move.goTo(digPos, "xzy")
+    move.turnTo(digHeading)
+  end
+
+  return true
+end
+
+m.cleave = function(depth, forward, right)
+  local homePos = location.getPos()
+  local homeHeading = location.getHeading()
+  -- Decrease forward and right magnitude by one for calc'ing desired position 
+  -- (because we are already on the first space)
+  forward = forward - forward / math.abs(forward)
+  right = right - right / math.abs(right)
+  local toPos = homePos + vector.new(forward, -depth + 1, right)
+
+  m.setChest(homePos)
+
+  path.solidRectangle(toPos, function (direction) 
+    m.digAndKeepOrToss(direction)
+  
+    return m.fuelAndInventoryCheck(homePos, homeHeading)
+  end)
+  
+  move.digTo(homePos, "yzx")
+  move.turnTo(homeHeading)
+  m.transferToChest()
+end
+
+m.layerBore = function (depth, forward, right)
+  local homePos = location.getPos()
+  local homeHeading = location.getHeading()
+  -- Decrease forward and right magnitude by one for calc'ing desired position 
+  -- (because we are already on the first space)
+  forward = forward - forward / math.abs(forward)
+  right = right - right / math.abs(right)
+  local toPos = homePos + vector.new(forward, -depth + 1, right)
+
+  local lastCompleteLayer = 0
+  local foundBedrock = false
+
+  m.setChest(homePos)
+
+  path.solidRectangle(toPos, function (direction)
+    -- Check above and below for good stuff
+    m.digAndKeepOrToss("Up", true)
+    m.digAndKeepOrToss("Down", direction ~= "Down")
+
+    if direction == "Down" then
+      if foundBedrock then
+        print("Completed last layer before bedrock")
+        return false
+      end
+      lastCompleteLayer = location.getPos().y
+
+      -- Try to move down twice (we don't care if it fails)
+      for i = 1, 2, 1 do
+        m.digAndKeepOrToss(direction)
+        if not m.fuelAndInventoryCheck(homePos, homeHeading) then return false end
+        turtle.down()
+      end
+    else
+
+    end
+
+    -- Handle bedrock, we will move up to avoid it until we are back at the last layer
+    while m.digAndKeepOrToss(direction) == "NO_DIG" and m.isBedrock(turtle["inspect"..direction]) do
+      foundBedrock = true
+      turtle.up()
+      if location.getPos().y > lastCompleteLayer then
+        print("Hit bedrock, and backtracked to last layer, done.")
+        return false
+      end
+    end
+
+    return m.fuelAndInventoryCheck(homePos, homeHeading)
+  end)
+
+  move.digTo(homePos, "yzx")
+  move.turnTo(homeHeading)
+  m.transferToChest()
+  
 end
 
 return m
