@@ -11,10 +11,10 @@ m.find = function()
   if bucketSlot == nil then
     for i = 1, 16 do
       item = turtle.getItemDetail(i)
-  
+
       if item and item.name == "minecraft:bucket" then
         bucketSlot = i
-  
+
         break
       end
     end
@@ -24,29 +24,28 @@ m.find = function()
 end
 
 -- try to take lava and refuel
-local function _tryRefuelByLava(placeFunc, inspectFunc)
+local function _tryRefuelByLava(placeFunc, inspectFunc, skipReselect)
   m.find()
 
   if bucketSlot and bucketSlot ~= 0 then
-    -- save previous slot to reselect
-    local slotOld = turtle.getSelectedSlot()
-
-    -- select the slot with the bucket
-    turtle.select(bucketSlot)
 
     -- try to grab lava, assumes an empty bucket
     -- may run into trouble if water is picked up
     local success, data = inspectFunc()
     if success then
       if fuel[data.name] then
+        -- save previous slot to reselect
+        local slotOld = turtle.getSelectedSlot()
+        -- select the slot with the bucket
+        turtle.select(bucketSlot)
         placeFunc()
         -- attempt to refuel, would work if lava
         turtle.refuel()
+        -- reselect old slot
+        if not skipReselect then turtle.select(slotOld) end
       end
     end
 
-    -- reselect old slot
-    turtle.select(slotOld)
   end
 end
 
