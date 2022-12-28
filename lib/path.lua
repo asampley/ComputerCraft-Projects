@@ -39,7 +39,6 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
 
   local x = 0
   local z = 0
-  local turn
   local move = function ()
     if not preMoveFunc("") then
       error("preMoveFunc returned false")
@@ -59,6 +58,7 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
       x = 0
 
       if z < zChange then
+        local turn
         -- Orient turtle for the next row
         if z % 2 == 1 then
           turn = turtle.turnLeft
@@ -69,12 +69,9 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
         move()
         turn()
       else
-        -- Orient turlte slightly home, and call one final preMove
-        if z % 2 == 0 then
-          turtle.turnLeft()
-        else
-          turtle.turnRight()
-        end
+        -- Turn turlte around (so we're facing trodden path), and call one final preMove
+        turtle.turnLeft()
+        turtle.turnLeft()
         preMoveFunc("")
       end
       z = z + 1
