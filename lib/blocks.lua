@@ -28,7 +28,7 @@ m.filter = {
 -- The first filter that returns true returns
 -- the corresponding value of map
 m.map = function(block, filters)
-  if not block.tag then
+  if not block.tags then
     -- items in inventory don't have metadata other than name, so fake the rest
     block.tags = { [block.name] = true }
   end
