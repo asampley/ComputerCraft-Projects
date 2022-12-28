@@ -149,26 +149,4 @@ m.freeSlot = function()
   end
 end
 
--- Returns the slot that has the most recent item, else 0
-m.getLastSlotWithItem = function()
-  for slot = 16, 1, -1 do
-    if turtle.getItemCount(slot) > 0 then
-      return slot
-    end
-  end
-  return 0
-end
-
--- Drops the last stack as long as it's not a bucket
--- slotExceptions: table indexed by slots eg. {[1]=true, [6]=true}
-m.dropLastStack = function (slotExceptions)
-  if not slotExceptions then slotExceptions = {} end
-  local slot = m.getLastSlotWithItem()
-  -- If we have something, and it's not a bucket
-  if slot > 0 and not slotExceptions[slot] then
-    turtle.select(slot)
-    turtle.drop(slot)
-  end
-end
-
 return m
