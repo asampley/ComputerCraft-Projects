@@ -306,8 +306,12 @@ end
 -- wants, and keep or toss it
 m.digAndKeepOrToss = function(direction, alwaysDig)
   bucket["place"..direction]() -- Do  any lava refueling
-  if not alwaysDig and not m.wanted(turtle["inspect"..direction]) then return "NO_DIG" end
-  if not turtle["dig"..direction]() then return "NO_DIG" end -- Nothing to dig
+  if not alwaysDig and not m.wanted(turtle["inspect"..direction]) then return "WONT_DIG" end -- Don't want it
+  if not turtle["dig"..direction]() then return "WONT_DIG" end -- Nothing or bedrock
+  if alwaysDig and turtle["detect"..direction]() then
+    -- need to clear all falling blocks
+    m.digAndKeepOrToss(direction, alwaysDig)
+  end
   local recentSlot = inventory.getLastSlotWithItem()
   if recentSlot == bucket.find() then return end -- Don't drop the bucket
   if recentSlot == 0 then return end -- Nothing to
@@ -399,7 +403,7 @@ m.layerBore = function (depth, forward, right)
     end
 
     -- Handle bedrock, we will move up to avoid it until we are back at the last layer
-    while m.digAndKeepOrToss(direction, true) == "NO_DIG" and m.isBedrock(turtle["inspect"..direction]) do
+    while m.digAndKeepOrToss(direction, true) == "WONT_DIG" and m.isBedrock(turtle["inspect"..direction]) do
       foundBedrock = true
       turtle.up()
       if location.getPos().y > lastCompleteLayer then
