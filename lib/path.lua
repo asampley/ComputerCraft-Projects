@@ -86,7 +86,7 @@ end
 -- Turlte will finish in an non-starting corner.
 m.solidRectangle = function(toPos, preMoveFunc)
   local startPos = location.getPos()
-  
+
   -- Figure out how many blocks we have to move vertically
   -- and create an fn to move vertically
   if toPos.y > location.getPos().y then
@@ -116,13 +116,13 @@ m.solidRectangle = function(toPos, preMoveFunc)
 
     if not preMoveFunc("Down") then return false end
     if currentPosition.y > toPos.y then
-      if not turtle.down() then 
+      if not turtle.down() then
         print("[solidRectangle] Couldn't move down")
         return false
       end
     end
   end
-  
+
 end
 
 return m

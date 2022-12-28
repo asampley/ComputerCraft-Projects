@@ -310,7 +310,7 @@ m.digAndKeepOrToss = function(direction, alwaysDig)
   if not turtle["dig"..direction]() then return "NO_DIG" end -- Nothing to dig
   local recentSlot = inventory.getLastSlotWithItem()
   if recentSlot == bucket.find() then return end -- Don't drop the bucket
-  if recentSlot == 0 then return end -- Nothing to 
+  if recentSlot == 0 then return end -- Nothing to
   if wants(turtle.getItemDetail(recentSlot)) then return end -- We want it
   -- Else drop it
   inventory.dropLastStack()
@@ -323,8 +323,8 @@ m.fuelAndInventoryCheck = function(homePos, homeHeading)
   if not m.enoughFuelToGetTo(homePos) or not inventory.freeSlot() then
     print("not enough fuel or inventory is full")
     local digPos = location.getPos()
-    local digHeading = location.getHeading()  
-    
+    local digHeading = location.getHeading()
+
     -- Go home, cleanup, then head back out
     move.digTo(homePos, "yzx")
     move.turnTo(homeHeading)
@@ -343,7 +343,7 @@ end
 m.cleave = function(depth, forward, right)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
-  -- Decrease forward and right magnitude by one for calc'ing desired position 
+  -- Decrease forward and right magnitude by one for calc'ing desired position
   -- (because we are already on the first space)
   forward = forward - forward / math.abs(forward)
   right = right - right / math.abs(right)
@@ -351,12 +351,12 @@ m.cleave = function(depth, forward, right)
 
   m.setChest(homePos)
 
-  path.solidRectangle(toPos, function (direction) 
+  path.solidRectangle(toPos, function (direction)
     m.digAndKeepOrToss(direction, true)
-  
+
     return m.fuelAndInventoryCheck(homePos, homeHeading)
   end)
-  
+
   move.digTo(homePos, "yzx")
   move.turnTo(homeHeading)
   m.transferToChest()
@@ -365,7 +365,7 @@ end
 m.layerBore = function (depth, forward, right)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
-  -- Decrease forward and right magnitude by one for calc'ing desired position 
+  -- Decrease forward and right magnitude by one for calc'ing desired position
   -- (because we are already on the first space)
   forward = forward - forward / math.abs(forward)
   right = right - right / math.abs(right)
@@ -414,7 +414,7 @@ m.layerBore = function (depth, forward, right)
   move.digTo(homePos, "yzx")
   move.turnTo(homeHeading)
   m.transferToChest()
-  
+
 end
 
 return m
