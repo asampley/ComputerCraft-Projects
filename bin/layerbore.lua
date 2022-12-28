@@ -4,6 +4,8 @@ local args = {...}
 
 if #args ~= 3 then
   print("Usage: layerbore <+/-maxDepth> <+/-forward> <+/-right>")
+  print("To prevent turtle from getting stuck in bedrock, the starting layer should be y % 3 == 0")
+  print("eg. set tutrle in layer 60")
   return
 end
 

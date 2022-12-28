@@ -432,6 +432,10 @@ m.layerBore = function (depth, forward, right)
       -- Handle bedrock, we will move up to avoid it until we are back at the last layer
       while m.smartDig(direction, true, homePos, homeHeading) == "BEDROCK" do
         foundBedrock = true
+        -- Try to move up
+        if m.smartDig("Up", true, homePos, homeHeading) == "BEDROCK" then
+          error("Stuck in bedrock at "..location.posToString(location.getPos()))
+        end
         turtle.up()
         if location.getPos().y > lastCompleteLayer then
           error("Hit bedrock, and backtracked to last layer, done.")
