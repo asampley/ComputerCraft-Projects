@@ -106,4 +106,8 @@ m.getHeading = function()
   return vector.new(0, 0, 0) + _G.location.heading
 end
 
+m.posToString = function (pos)
+  return "["..pos.x..","..pos.y..","..pos.z.."]"
+end
+
 return m

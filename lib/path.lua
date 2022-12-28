@@ -45,7 +45,7 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
       error("preMoveFunc returned false")
     end
     if not turtle.forward() then
-      error("Couldn't move forward")
+      error("Couldn't move forward at "..location.posToString(location.getPos()))
     end
   end
 
@@ -57,8 +57,9 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
         x = x + 1
       end
       x = 0
-      -- Orient turtle for the next row
+
       if z < zChange then
+        -- Orient turtle for the next row
         if z % 2 == 1 then
           turn = turtle.turnLeft
         else
@@ -67,6 +68,14 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
         turn()
         move()
         turn()
+      else
+        -- Orient turlte slightly home, and call one final preMove
+        if z % 2 == 0 then
+          turtle.turnLeft()
+        else
+          turtle.turnRight()
+        end
+        preMoveFunc("")
       end
       z = z + 1
     end
@@ -114,10 +123,10 @@ m.solidRectangle = function(toPos, preMoveFunc)
     -- Move to opposite corner
     m.horizontalLayer(xto, zto, preMoveFunc)
 
-    if not preMoveFunc("Down") then return false end
     if currentPosition.y <= toPos.y then return true end
+    if not preMoveFunc("Down") then return false end
     if not turtle.down() then
-      print("[solidRectangle] Couldn't move down")
+      print("[solidRectangle] Couldn't move down at "..location.posToString(location.getPos()))
       return false
     end
   end
