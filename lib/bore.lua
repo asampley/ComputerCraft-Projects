@@ -304,9 +304,9 @@ end
 -- Will attempt to pick up lava and refuel, then
 -- dig the space in front, check the inventory item against
 -- wants, and keep or toss it
-m.digAndKeepOrToss = function(direction, digOnlyWanted)
+m.digAndKeepOrToss = function(direction, alwaysDig)
   bucket["place"..direction]() -- Do  any lava refueling
-  if digOnlyWanted and not m.wanted(turtle["inspect"..direction]) then return "NO_DIG" end
+  if not alwaysDig and not m.wanted(turtle["inspect"..direction]) then return "NO_DIG" end
   if not turtle["dig"..direction]() then return "NO_DIG" end -- Nothing to dig
   local recentSlot = inventory.getLastSlotWithItem()
   if recentSlot == bucket.find() then return end -- Don't drop the bucket
@@ -352,7 +352,7 @@ m.cleave = function(depth, forward, right)
   m.setChest(homePos)
 
   path.solidRectangle(toPos, function (direction) 
-    m.digAndKeepOrToss(direction)
+    m.digAndKeepOrToss(direction, true)
   
     return m.fuelAndInventoryCheck(homePos, homeHeading)
   end)
@@ -378,8 +378,8 @@ m.layerBore = function (depth, forward, right)
 
   path.solidRectangle(toPos, function (direction)
     -- Check above and below for good stuff
-    m.digAndKeepOrToss("Up", true)
-    m.digAndKeepOrToss("Down", direction ~= "Down")
+    m.digAndKeepOrToss("Up", false)
+    m.digAndKeepOrToss("Down", false)
 
     if direction == "Down" then
       if foundBedrock then
@@ -390,7 +390,7 @@ m.layerBore = function (depth, forward, right)
 
       -- Try to move down twice (we don't care if it fails)
       for i = 1, 2, 1 do
-        m.digAndKeepOrToss(direction)
+        m.digAndKeepOrToss(direction, true)
         if not m.fuelAndInventoryCheck(homePos, homeHeading) then return false end
         turtle.down()
       end
@@ -399,7 +399,7 @@ m.layerBore = function (depth, forward, right)
     end
 
     -- Handle bedrock, we will move up to avoid it until we are back at the last layer
-    while m.digAndKeepOrToss(direction) == "NO_DIG" and m.isBedrock(turtle["inspect"..direction]) do
+    while m.digAndKeepOrToss(direction, true) == "NO_DIG" and m.isBedrock(turtle["inspect"..direction]) do
       foundBedrock = true
       turtle.up()
       if location.getPos().y > lastCompleteLayer then
