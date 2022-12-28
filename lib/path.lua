@@ -82,25 +82,20 @@ end
 -- preMoveFunc: Called before each move, if it returns false the layer cut terminates
 -- The preMoveFunc(direction) must dig the block in "direction if it exists,
 -- otherwise the turtle won't be able to move and the program will terminate.
--- direction can be "" for forward, "Up" for up, or "Down"
+-- direction can be "" for forward, or "Down"
 -- Turlte will finish in an non-starting corner.
 m.solidRectangle = function(toPos, preMoveFunc)
   local startPos = location.getPos()
   
   -- Figure out how many blocks we have to move vertically
   -- and create an fn to move vertically
-  local yChange = toPos.y - location.getPos().y
-  local upOrDown
-  if yChange < 0 then
-    upOrDown = "Down"
-  else
-    upOrDown = "Up"
+  if toPos.y > location.getPos().y then
+    print("toPos must have a lower y value")
+    return false
   end
-  yChange = math.abs(yChange)
 
   -- Start cutting
-  local y = 0
-  while y <= yChange do
+  while location.getPos().y >= toPos.y do
     -- Choose the coordinate that is opposite to the current corner
     local xto
     local zto
@@ -118,14 +113,14 @@ m.solidRectangle = function(toPos, preMoveFunc)
 -- print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
     -- Move to opposite corner
     m.horizontalLayer(xto, zto, preMoveFunc)
-    currentPosition = location.getPos()
-    if y < yChange then
-      if not preMoveFunc(upOrDown) or not turtle[string.lower(upOrDown)]() then 
-        -- print("Couldn't move "..upOrDown)
-        break
+
+    if not preMoveFunc("Down") then return false end
+    if currentPosition.y > toPos.y then
+      if not turtle.down() then 
+        print("[solidRectangle] Couldn't move down")
+        return false
       end
     end
-    y = y + 1
   end
   
 end
