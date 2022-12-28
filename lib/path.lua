@@ -118,7 +118,7 @@ m.solidRectangle = function(toPos, preMoveFunc)
     end
 -- print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
     -- Move to opposite corner
-    m.horizontalLayer(xto, zto, preMoveFunc)
+    if not m.horizontalLayer(xto, zto, preMoveFunc) then return false end
 
     if currentPosition.y <= toPos.y then return true end
     if not preMoveFunc("Down") then return false end
