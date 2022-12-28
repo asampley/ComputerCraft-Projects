@@ -115,11 +115,10 @@ m.solidRectangle = function(toPos, preMoveFunc)
     m.horizontalLayer(xto, zto, preMoveFunc)
 
     if not preMoveFunc("Down") then return false end
-    if currentPosition.y > toPos.y then
-      if not turtle.down() then
-        print("[solidRectangle] Couldn't move down")
-        return false
-      end
+    if currentPosition.y <= toPos.y then return true end
+    if not turtle.down() then
+      print("[solidRectangle] Couldn't move down")
+      return false
     end
   end
 
