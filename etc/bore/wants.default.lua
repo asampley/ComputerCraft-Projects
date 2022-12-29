@@ -44,7 +44,7 @@ local rules = {
   {false, tag, "minecraft:slabs"},
 
   -- common overworld
-  {false, tag, "minecraft:base_stone_overworld"},
+  {false, tag, "minecraft:base_stone_overworld"}, -- stone, andestie, granite, etc
   {false, name, "minecraft:cobblestone"}, -- required for inventory checks
   {false, tag, "minecraft:dirt"},
   {false, name, "minecraft:gravel"},
