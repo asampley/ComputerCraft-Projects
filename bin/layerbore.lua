@@ -17,4 +17,7 @@ if not depth or depth < 1 then error("Depth must 1 or greater") end
 if not forward then error("forward must be an integer") end
 if not right then error("right must be an integer") end
 
+local startTime = os.clock()
 bore.layerBore(depth, forward, right)
+local timeTaken = (os.clock() - startTime) / 60
+print("Finished in "..timeTaken.." minutes")
