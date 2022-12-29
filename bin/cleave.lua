@@ -3,7 +3,7 @@ local bore = require("/lib/bore")
 local args = {...}
 
 if #args ~= 3 then
-  print("Usage: layerbore <+/-depth> <+/-forward> <+/-right>")
+  print("Usage: cleave <+/-depth> <+/-forward> <+/-right>")
   return
 end
 
