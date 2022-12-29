@@ -362,7 +362,7 @@ m.cleanInventory = function ()
   for slot = 1, 16, 1 do
     if turtle.getItemCount(slot) > 0
       and slot ~= bucketSlot
-      and not wants(turtle.getItemDetail(slot)) then
+      and not wants(turtle.getItemDetail(slot, true)) then
         turtle.select(slot)
         turtle.drop()
     end
