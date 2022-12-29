@@ -44,7 +44,7 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
       error("preMoveFunc returned false")
     end
     if not turtle.forward() then
-      error("Couldn't move forward at "..location.posToString(location.getPos()))
+      error("Couldn't move forward at "..tostring(location.getPos()))
     end
   end
 
@@ -123,7 +123,7 @@ m.solidRectangle = function(toPos, preMoveFunc)
     if currentPosition.y <= toPos.y then return true end
     if not preMoveFunc("Down") then return false end
     if not turtle.down() then
-      print("[solidRectangle] Couldn't move down at "..location.posToString(location.getPos()))
+      print("[solidRectangle] Couldn't move down at "..tostring(location.getPos()))
       return false
     end
   end

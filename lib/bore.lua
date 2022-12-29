@@ -434,7 +434,7 @@ m.layerBore = function (depth, forward, right)
         foundBedrock = true
         -- Try to move up
         if m.smartDig("Up", true, homePos, homeHeading) == "BEDROCK" then
-          error("Stuck in bedrock at "..location.posToString(location.getPos()))
+          error("Stuck in bedrock at "..tostring(location.getPos()))
         end
         turtle.up()
         if location.getPos().y > lastCompleteLayer then
