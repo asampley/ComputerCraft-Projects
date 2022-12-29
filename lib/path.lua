@@ -18,16 +18,16 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
   -- Update the bounds to reflect this
   if xChange >= 0 and zChange >= 0 then
     -- both pos
-    move.turnTo(vector.new(1, 0, 0))
+    move.turnTo(location.X())
   elseif zChange < 0 and xChange < 0 then
     -- both neg
-    move.turnTo(vector.new(-1, 0, 0))
+    move.turnTo(-location.X())
   elseif zChange < 0 or xChange < 0 then
     -- exactly 1 is neg
     if zChange < 0 then
-      move.turnTo(vector.new(0, 0, -1))
+      move.turnTo(-location.Z())
     elseif xChange < 0 then
-      move.turnTo(vector.new(0, 0, 1))
+      move.turnTo(location.Z())
     end
     -- In these cases the x/y bounds switch places
     local temp = zChange
