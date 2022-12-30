@@ -6,8 +6,9 @@ local move = require("/lib/move")
 local m = {}
 
 -- load config files to determine blocks to search for and items to refuel with
-local wants = require("/etc/bore/wants")
-local fuel = require("/etc/bore/fuel")
+local config = require("/lib/config")
+local wants = config.load("bore/wants")
+local fuel = config.load("bore/fuel")
 
 -- record chest location
 local chestPos

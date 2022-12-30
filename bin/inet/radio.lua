@@ -4,7 +4,7 @@ local radio = require("/lib/inet/radio")
 local midi_play = require("/lib/midi-play")
 local synth = require("/lib/synth")
 
-local config = require("/etc/radio")
+local config = require("/lib/config").load("radio")
 
 local args = require("/lib/args").parse({}, {...})
 

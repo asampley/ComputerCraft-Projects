@@ -4,7 +4,7 @@ local m = {}
 local bucketSlot
 
 -- list of fuels to bucket up
-local fuel = require("/etc/bucket")
+local fuel = require("/lib/config").load("bucket")
 
 m.find = function()
   if bucketSlot ~= 0 then

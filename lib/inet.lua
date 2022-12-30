@@ -20,7 +20,7 @@ m.loopback = function(message, protocol)
 end
 
 -- load config
-local open = require("/etc/inet")
+local open = require("/lib/config").load("inet")
 for _, modem in ipairs(open) do
   if peripheral.getType(modem) == "modem" then
     m.open(modem)

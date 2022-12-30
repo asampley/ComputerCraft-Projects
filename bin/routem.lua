@@ -1,8 +1,4 @@
-local success, config = pcall(require, "/etc/routem")
-
-if not success then
-  error("Unable to run config")
-end
+local config = require("/lib/config").load("routem")
 
 if not config.pull then
   error("No \"pull\" element in config")
