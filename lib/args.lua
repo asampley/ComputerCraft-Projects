@@ -90,4 +90,21 @@ m.parse = function(definition, arguments)
   return args
 end
 
+
+m.dimensionsToVector = function (height, forward, right)
+  local dimensions = {
+    height = height,
+    forward = forward,
+    right = right,
+  }
+  for dimension, value in pairs(dimensions) do
+    value = tonumber(value)
+    if value == nil then error(dimension.." must be an integer") end
+    if value == 0 then error("0 for "..dimension..", nothing to do") end
+    -- Decrement magnitude by 1 so that the to position is correct
+    dimensions[dimension] = value - value/math.abs(value)
+  end
+  return vector.new(dimensions.forward, dimensions.height, dimensions.right)
+end
+
 return m

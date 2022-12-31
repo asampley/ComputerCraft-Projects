@@ -1,3 +1,4 @@
+local arguments = require("/lib/args")
 local bore = require("/lib/bore")
 
 local args = {...}
@@ -9,16 +10,9 @@ if #args ~= 3 then
   return
 end
 
-local height = tonumber(args[1])
-local forward = tonumber(args[2])
-local right = tonumber(args[3])
-
-if not height then error("Height must be an integer") end
-if not forward then error("forward must be an integer") end
-if not right then error("right must be an integer") end
-if height == 0 or forward == 0 or right == 0 then error("0 for a height/forward/right, nothing to do") end
+local dimensionVector = arguments.dimensionsToVector(args[1], args[2], args[3])
 
 local startTime = os.clock()
-bore.layerBore(height, forward, right)
+bore.layerBore(dimensionVector)
 local timeTaken = (os.clock() - startTime) / 60
 print("Finished in "..timeTaken.." minutes")

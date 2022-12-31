@@ -369,15 +369,10 @@ m.cleanInventory = function ()
   end
 end
 
-m.cleave = function(height, forward, right)
+m.cleave = function(dimensionVector)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
-  -- Decrease forward and right magnitude by one for calc'ing desired position
-  -- (because we are already on the first space)
-  forward = forward - forward / math.abs(forward)
-  right = right - right / math.abs(right)
-  height = height - height/math.abs(height)
-  local toPos = homePos + vector.new(forward, height, right)
+  local toPos = homePos + dimensionVector
 
   m.setChest(homePos)
 
@@ -397,15 +392,10 @@ m.cleave = function(height, forward, right)
   m.transferToChest()
 end
 
-m.layerBore = function (height, forward, right)
+m.layerBore = function (dimensionVector)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
-  -- Decrease forward and right magnitude by one for calc'ing desired position
-  -- (because we are already on the first space)
-  forward = forward - forward / math.abs(forward)
-  right = right - right / math.abs(right)
-  height = height - height/math.abs(height)
-  local toPos = homePos + vector.new(forward, math.floor(height/3), right)
+  local toPos = homePos + dimensionVector
 
   local lastCompleteLayer = 0
   local foundBedrock = false
@@ -436,7 +426,7 @@ m.layerBore = function (height, forward, right)
         print("found bedrock, last "..lastCompleteLayer.." cur "..location.getPos().y)
         foundBedrock = true
         -- Try to move away from bedrock layer (move opposite direction)
-        local awayDir = height > 0 and "Down" or "Up"
+        local awayDir = dimensionVector.y >= 0 and "Down" or "Up"
         print("dir "..direction.." awayDir "..awayDir)
         if m.smartDig(awayDir, true, homePos, homeHeading) == "BEDROCK" then
           error("Stuck in bedrock at "..tostring(location.getPos()))
