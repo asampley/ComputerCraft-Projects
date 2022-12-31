@@ -374,10 +374,34 @@ m.cleave = function(dimensionVector)
   local homeHeading = location.getHeading()
   local toPos = homePos + dimensionVector
 
+  local shouldDig = { Up=true, Down=true, }
+  local verticalDir = dimensionVector.y >= 0 and "Up" or "Down"
+  local moveVertical = function ()
+    m.smartDig(verticalDir, true, homePos, homeHeading)
+    turtle[string.lower(verticalDir)]()
+  end
+  local setupForRemainingLayers = function (remainLayers)
+    if remainLayers <= 0 then error("Completed cleaving :)") end
+    if remainLayers == 1 then shouldDig = { Up=false, Down=false, } end
+    if remainLayers == 2 then shouldDig[verticalDir] = false end
+    if remainLayers >= 2 then moveVertical() end
+  end
+
   m.setChest(homePos)
+
+  setupForRemainingLayers(math.abs(toPos.y - location.getPos().y) + 1)
 
   path.solidRectangle(toPos, function (direction)
     local success, error = pcall(function()
+
+      -- dig above and below as required
+      if shouldDig.Up then m.smartDig("Up", true, homePos, homeHeading) end
+      if shouldDig.Down then m.smartDig("Down", true, homePos, homeHeading) end
+
+      if direction == "Down" or direction == "Up" then
+        setupForRemainingLayers(math.abs(toPos.y - location.getPos().y) - 1)
+        moveVertical()
+      end
 
       m.smartDig(direction, true, homePos, homeHeading)
 
