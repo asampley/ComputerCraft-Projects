@@ -5,14 +5,13 @@ if #args ~= 1 then
     return
 end
 
-local baseUrl = args[1]
+_G.baseUrl = args[1]
 
 local file = "/lib/wequire.lua"
 
-local response = http.get({ url = baseUrl .. file, binary = true })
+local response = http.get({ url = _G.baseUrl .. file, binary = true })
 if response and response.getResponseCode() == 200 then
-  -- Hacky... But works, inject the desired url directly into lib/wequire.lua
-  fs.open(file, "wb").write("local baseUrl = \""..baseUrl.."\"\n"..response.readAll())
+  fs.open(file, "wb").write(response.readAll())
 end
 
 local wequire = require("/lib/wequire")

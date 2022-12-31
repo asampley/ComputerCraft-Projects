@@ -1,5 +1,3 @@
--- local baseUrl = should be injected by /bootstrap.lua
-
 local m = {}
 
 -- cache functions in case these global functions are overwritten with these versions
