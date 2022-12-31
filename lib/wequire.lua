@@ -49,9 +49,11 @@ m.require = function(file)
 end
 
 m.loadfile = function(file, mode, env)
-  local f = _loadfile(file, mode, env)
+  if not m.overwrite then
+    local f = _loadfile(file, mode, env)
 
-  if f then return f end
+    if f then return f end
+  end
 
   local fetchList = {}
 
@@ -63,7 +65,7 @@ m.loadfile = function(file, mode, env)
         local ppp = p .. "/" .. pp
 
         if not m.overwrite then
-          f = _loadfile(ppp, mode, env)
+          local f = _loadfile(ppp, mode, env)
 
           if f then return f end
         end
