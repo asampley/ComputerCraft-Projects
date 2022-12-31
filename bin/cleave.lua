@@ -3,21 +3,22 @@ local bore = require("/lib/bore")
 local args = {...}
 
 if #args ~= 3 then
-  print("Usage: cleave <+/-depth> <+/-forward> <+/-right>")
+  print("Usage: cleave <+/-height> <+/-forward> <+/-right>")
   return
 end
 
-local depth = tonumber(args[1])
+local height = tonumber(args[1])
 local forward = tonumber(args[2])
 local right = tonumber(args[3])
 
-if not depth or depth < 1 then error("Depth must 1 or greater") end
+if not height then error("height must be an integer") end
 if not forward then error("forward must be an integer") end
 if not right then error("right must be an integer") end
+if height == 0 or forward == 0 or right == 0 then error("0 for a height/forward/right, nothing to do") end
 
 local startTime = os.clock()
 
-bore.cleave(depth, forward, right)
+bore.cleave(height, forward, right)
 
 local timeTaken = (os.clock() - startTime) / 60
 print("Finished in "..timeTaken.." minutes")

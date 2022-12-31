@@ -68,6 +68,8 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
       else
         -- Turn back towards trodden path, and call one final preMove
         turn(turnOffset + w + 1)
+        -- an additional turn is required for width==0 since trodden path is only behind
+        if w == 0 then turn(turnOffset + w + 1) end
         preMoveFunc("")
       end
 
@@ -88,39 +90,24 @@ end
 -- Turlte will finish in an non-starting corner.
 m.solidRectangle = function(toPos, preMoveFunc)
   local startPos = location.getPos()
-
-  -- Figure out how many blocks we have to move vertically
-  -- and create an fn to move vertically
-  if toPos.y > location.getPos().y then
-    print("toPos must have a lower y value")
-    return false
-  end
+  local yChange = toPos.y - startPos.y
+  local direction = yChange > 0 and "Up" or "Down"
 
   -- Start cutting
-  while location.getPos().y >= toPos.y do
+  for y = 0, math.abs(yChange), 1 do
     -- Choose the coordinate that is opposite to the current corner
-    local xto
-    local zto
     local currentPosition = location.getPos()
-    if currentPosition.x == startPos.x then
-      xto = toPos.x
-    else
-      xto = startPos.x
-    end
-    if currentPosition.z == startPos.z then
-      zto = toPos.z
-    else
-      zto = startPos.z
-    end
--- print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
+    local xto = currentPosition.x == startPos.x and toPos.x or startPos.x
+    local zto = currentPosition.z == startPos.z and toPos.z or startPos.z
+
+  -- print("do from "..currentPosition.x..","..currentPosition.z.." to "..xto..","..zto)
     -- Move to opposite corner
     if not m.horizontalLayer(xto, zto, preMoveFunc) then return false end
 
-    if currentPosition.y <= toPos.y then return true end
-    if not preMoveFunc("Down") then return false end
-    if not turtle.down() then
-      print("[solidRectangle] Couldn't move down at "..tostring(location.getPos()))
-      return false
+    if y == math.abs(yChange) then return true end
+    if not preMoveFunc(direction) then return false end
+    if not turtle[string.lower(direction)]() then
+      error("[solidRectangle] Couldn't move "..direction.." at "..tostring(location.getPos()))
     end
   end
 

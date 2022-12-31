@@ -369,14 +369,15 @@ m.cleanInventory = function ()
   end
 end
 
-m.cleave = function(depth, forward, right)
+m.cleave = function(height, forward, right)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
   -- Decrease forward and right magnitude by one for calc'ing desired position
   -- (because we are already on the first space)
   forward = forward - forward / math.abs(forward)
   right = right - right / math.abs(right)
-  local toPos = homePos + vector.new(forward, -depth + 1, right)
+  height = height - height/math.abs(height)
+  local toPos = homePos + vector.new(forward, height, right)
 
   m.setChest(homePos)
 
@@ -396,14 +397,15 @@ m.cleave = function(depth, forward, right)
   m.transferToChest()
 end
 
-m.layerBore = function (depth, forward, right)
+m.layerBore = function (height, forward, right)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
   -- Decrease forward and right magnitude by one for calc'ing desired position
   -- (because we are already on the first space)
   forward = forward - forward / math.abs(forward)
   right = right - right / math.abs(right)
-  local toPos = homePos + vector.new(forward, -depth + 1, right)
+  height = height - height/math.abs(height)
+  local toPos = homePos + vector.new(forward, math.floor(height/3), right)
 
   local lastCompleteLayer = 0
   local foundBedrock = false
@@ -416,28 +418,33 @@ m.layerBore = function (depth, forward, right)
       -- Check above and below for good stuff
       m.smartDig("Up", false, homePos, homeHeading)
       m.smartDig("Down", false, homePos, homeHeading)
-      if direction == "Down" then
+      if direction == "Down" or direction == "Up" then
         if foundBedrock then
           error("Completed last layer before bedrock.")
         end
         lastCompleteLayer = location.getPos().y
 
-        -- Try to move down twice (we don't care if it fails)
+        -- Try to skip 2 layers (we don't care if it fails)
         for i = 1, 2, 1 do
           m.smartDig(direction, true, homePos, homeHeading)
-          turtle.down()
+          turtle[string.lower(direction)]()
         end
       end
 
-      -- Handle bedrock, we will move up to avoid it until we are back at the last layer
+      -- Handle bedrock, we will move up/down to avoid it until we are back at the last layer
       while m.smartDig(direction, true, homePos, homeHeading) == "BEDROCK" do
+        print("found bedrock, last "..lastCompleteLayer.." cur "..location.getPos().y)
         foundBedrock = true
-        -- Try to move up
-        if m.smartDig("Up", true, homePos, homeHeading) == "BEDROCK" then
+        -- Try to move away from bedrock layer (move opposite direction)
+        local awayDir = height > 0 and "Down" or "Up"
+        print("dir "..direction.." awayDir "..awayDir)
+        if m.smartDig(awayDir, true, homePos, homeHeading) == "BEDROCK" then
           error("Stuck in bedrock at "..tostring(location.getPos()))
         end
-        turtle.up()
-        if location.getPos().y > lastCompleteLayer then
+        turtle[string.lower(awayDir)]()
+        if awayDir == "Up" and location.getPos().y >= lastCompleteLayer
+          or awayDir == "Down" and location.getPos().y <= lastCompleteLayer
+        then
           error("Hit bedrock, and backtracked to last layer, done.")
         end
       end
