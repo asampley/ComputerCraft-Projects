@@ -14,31 +14,27 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
   local xChange = xPos - location.getPos().x
   local zChange = zPos - location.getPos().z
 
-  -- Rotate the Turtle's heading so that it has to move forward and right
-  -- Update the bounds to reflect this
-  if xChange >= 0 and zChange >= 0 then
-    -- both pos
-    move.turnTo(location.X())
-  elseif zChange < 0 and xChange < 0 then
-    -- both neg
-    move.turnTo(-location.X())
-  elseif zChange < 0 or xChange < 0 then
-    -- exactly 1 is neg
-    if zChange < 0 then
-      move.turnTo(-location.Z())
-    elseif xChange < 0 then
-      move.turnTo(location.Z())
-    end
-    -- In these cases the x/y bounds switch places
-    local temp = zChange
-    zChange = xChange
-    xChange = temp
-  end
-  xChange = math.abs(xChange)
-  zChange = math.abs(zChange)
+  local length --longer dimension
+  local width --shorter dimention
+  local turnOffset -- keeps track of if we should turn right or left
 
-  local x = 0
-  local z = 0
+  -- We want to run along the longer dimension for speed optimization
+  if math.abs(xChange) >= math.abs(zChange) then
+    turnOffset = 0
+    length = math.abs(xChange)
+    width = math.abs(zChange)
+    -- face towards positive or negative x
+    move.turnTo(location.X()*xChange/math.abs(xChange))
+  else
+    turnOffset = 1
+    length = math.abs(zChange)
+    width = math.abs(xChange)
+    -- face towards positive or negative z
+    move.turnTo(location.Z()*zChange/math.abs(zChange))
+  end
+  -- update turnOffset to account for width's +/-
+  if xChange * zChange < 0 then turnOffset = turnOffset + 1 end
+
   local move = function ()
     if not preMoveFunc("") then
       error("preMoveFunc returned false")
@@ -48,33 +44,33 @@ m.horizontalLayer = function(xPos, zPos, preMoveFunc)
     end
   end
 
-  local success, error = pcall(function()
-    -- Start cutting
-    while z < zChange + 1 do
-      while x < xChange do
-        move()
-        x = x + 1
-      end
-      x = 0
+  local turn = function (turnOffset)
+    if turnOffset % 2 == 1 then
+      turtle.turnLeft()
+    else
+      turtle.turnRight()
+    end
+  end
 
-      if z < zChange then
-        local turn
-        -- Orient turtle for the next row
-        if z % 2 == 1 then
-          turn = turtle.turnLeft
-        else
-          turn = turtle.turnRight
-        end
-        turn()
+  local success, error = pcall(function()
+
+    for w = 0, width, 1 do
+
+      for l = 0, length - 1, 1 do
         move()
-        turn()
+      end
+
+      if w < width then
+        -- Orient turtle for the next row
+        turn(turnOffset + w)
+        move()
+        turn(turnOffset + w)
       else
-        -- Turn turlte around (so we're facing trodden path), and call one final preMove
-        turtle.turnLeft()
-        turtle.turnLeft()
+        -- Turn back towards trodden path, and call one final preMove
+        turn(turnOffset + w + 1)
         preMoveFunc("")
       end
-      z = z + 1
+
     end
   end)
 
