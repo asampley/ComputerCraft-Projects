@@ -350,7 +350,7 @@ m.fuelAndInventoryCheck = function(homePos, homeHeading)
     if not m.enoughFuelToGetTo(digPos * 2) then
       error("Not enough fuel to continue")
     end
-    move.goTo(digPos, "xzy")
+    move.digTo(digPos, "xzy")
     move.turnTo(digHeading)
   end
 
