@@ -34,7 +34,6 @@ m.require = function(file)
     local ok, val = pcall(_require, file)
 
     if ok then return val end
-    print(val)
   end
 
   for search in package.path:gmatch("[^;]+") do
