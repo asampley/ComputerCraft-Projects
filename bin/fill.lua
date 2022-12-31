@@ -26,10 +26,15 @@ if dimensionVector.y < 0 and placeDir ~= "Up" then print("placeDirection should 
 
 local toPos = location.getPos() + dimensionVector
 
-turtle.select(1)
-inventory.setAutoRefill(true)
+local slot = 1
+turtle.select(slot)
 
 path.solidRectangle(toPos, function (direction)
+  while turtle.getItemCount() == 0 and slot < 16 do
+    slot = slot + 1
+    turtle.select(slot)
+  end
+  if turtle.getItemCount() == 0 then error("Ran out of items to place") end
   turtle["place"..placeDir]()
   return true
 end)
