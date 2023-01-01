@@ -38,4 +38,8 @@ m.map = function(block, filters)
   end
 end
 
+m.isBedrock = function (block)
+  return block.name == "minecraft:bedrock"
+end
+
 return m

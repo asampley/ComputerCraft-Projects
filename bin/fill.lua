@@ -29,7 +29,7 @@ local toPos = location.getPos() + dimensionVector
 local slot = 1
 turtle.select(slot)
 
-path.solidRectangle(toPos, function (direction)
+path.rectangleSimple(toPos, function (direction)
   while turtle.getItemCount() == 0 and slot < 16 do
     slot = slot + 1
     turtle.select(slot)
