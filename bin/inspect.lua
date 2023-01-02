@@ -1,5 +1,25 @@
+
+local args = {...}
+
+if #args > 1 then
+  print("Usage: inspect [<direction>]")
+  return
+end
+
+local direction = args[1]
+if direction ~= "" and direction ~= "Up" and direction ~= "Down" then
+  print('direction must be "" (forward), "Up", or "Down"')
+  return
+end
+
 -- Just prints the name of the block in front of turtle
-local found, block = turtle.inspect()
+local found, block = turtle["inspect"..direction]()
+print("found:")
+print(found)
+if not found then
+  print(block)
+  return
+end
 
 print("tags:")
 local a = 1
