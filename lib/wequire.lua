@@ -1,4 +1,3 @@
--- local baseUrl = should be injected by /bootstrap.lua
 local config = require("/lib/config").load("wequire")
 
 local m = {}
