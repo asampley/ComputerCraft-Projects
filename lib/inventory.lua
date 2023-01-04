@@ -31,14 +31,14 @@ local autoRefill = false
 turtle.select(1)
 
 local selected = 1
-local _turtle = {}
-_turtle.select = turtle.select
-_turtle.placeDown = turtle.placeDown
-_turtle.placeUp = turtle.placeUp
-_turtle.place = turtle.place
+_G._turtle = _G._turtle or {}
+_G._turtle.select = _G._turtle.select or turtle.select
+_G._turtle.placeDown = _G._turtle.placeDown or turtle.placeDown
+_G._turtle.placeUp = _G._turtle.placeUp or turtle.placeUp
+_G._turtle.place = _G._turtle.place or turtle.place
 
 turtle.select = function(slot)
-  if (_turtle.select(slot)) then
+  if (_G._turtle.select(slot)) then
     selected = slot
     return true
   end
@@ -101,9 +101,9 @@ m.placeRefill = function(placeFunc, ...)
   return placeFunc(arg)
 end
 
-turtle.place = function(...) return placeRefill(_turtle.place, ...) end
-turtle.placeUp = function() return placeRefill(_turtle.placeUp) end
-turtle.placeDown = function() return placeRefill(_turtle.placeDown) end
+turtle.place = function(...) return m.placeRefill(_G._turtle.place, ...) end
+turtle.placeUp = function(...) return m.placeRefill(_G._turtle.placeUp, ...) end
+turtle.placeDown = function(...) return m.placeRefill(_G._turtle.placeDown, ...) end
 
 --[[
 

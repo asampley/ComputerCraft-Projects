@@ -1,7 +1,9 @@
+local blocks = require("/lib/blocks")
 local bucket = require("/lib/bucket")
 local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
+local path = require("/lib/path")
 
 local m = {}
 
@@ -25,10 +27,8 @@ end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
   while not moveFunc() do
-    local blockFound, block = inspectFunc()
-    if blockFound and block.name == "minecraft:bedrock" then
-      return false
-    end
+    local found, block = inspectFunc()
+    if found and blocks.isBedrock(block) then return false end
     digFunc()
   end
   return true
@@ -65,10 +65,10 @@ m.transferToChest = function()
 
   for i = 1, 16 do
     if i ~= bucketSlot then
-      turtle.select(i)
       -- don't transfer fuel unless we are full
-      local item = turtle.getItemDetail()
-      if not m.shouldFuel() or not item or not fuel[item.name] then
+      local item = turtle.getItemDetail(i)
+      if item and (not fuel[item.name] or not m.shouldFuel()) then
+        turtle.select(i)
         turtle.dropUp()
       end
     end
@@ -109,7 +109,14 @@ end
 
 -- Is there enough fuel for forward and backward trip
 m.enoughFuel = function()
+  if turtle.getFuelLevel() == "unlimited" then return true end
   return turtle.getFuelLevel() > #stack + #stack - stackI + 2
+end
+
+m.enoughFuelToGetTo = function(position)
+  if turtle.getFuelLevel() == "unlimited" then return true end
+  local path = position - location.getPos()
+  return turtle.getFuelLevel() > math.abs(path.x) + math.abs(path.y) + math.abs(path.z) + 2
 end
 
 local function init(position)
@@ -288,6 +295,133 @@ m.advance = function()
   end
 
   return true
+end
+
+-- direction is "" for forward, "Down", or "Up"
+-- Will attempt to pick up lava and refuel, then
+-- dig the space in front, check the inventory item against
+-- wants, and keep or toss it
+m.smartDig = function(direction, alwaysDig, homePos, homeHeading)
+  bucket["place"..direction]() -- Do  any lava refueling
+  m.fuelAndInventoryCheck(homePos, homeHeading) -- Throws error if we can't continue
+  local found, block = turtle["inspect"..direction]()
+  if not found then return end
+  if blocks.isBedrock(block) then return "BEDROCK" end
+  if not alwaysDig and not wants(block) then return end -- Don't want it
+  -- Otherwise we want it, or we need to alwaysDig ittry to dig it
+  if not turtle["dig"..direction]() then return end -- Nothing to dig
+  -- need to clear all falling blocks if we're trying to move in that direction
+  while alwaysDig and turtle["dig"..direction]() do end
+end
+
+-- Checks if we need to go home, if we do, it will try to return to the same
+-- position and will return true, else returns false (preferably from homePos)
+m.fuelAndInventoryCheck = function(homePos, homeHeading)
+  local goHome = false
+
+  if not inventory.freeSlot() then
+    m.cleanInventory()
+  end
+  if not inventory.freeSlot() then
+    print("Inventory is full")
+    goHome = true
+  end
+
+  -- if we are low on fuel or inventory is full
+  if not m.enoughFuelToGetTo(homePos) then
+    print("Fuel is low, go home")
+    goHome = true
+  end
+
+  if goHome then
+    local digPos = location.getPos()
+    local digHeading = location.getHeading()
+
+    -- Go home, cleanup, then head back out
+    move.digTo(homePos, "yzx")
+    move.turnTo(homeHeading)
+    m.cleanInventory() -- So we don't drop off stuff picked up on move.digTo
+    m.transferToChest()
+    if not inventory.freeSlot() then
+      error("Could not empty inventory, can't continue")
+    end
+    if not m.enoughFuelToGetTo(digPos * 2) then
+      error("Not enough fuel to continue")
+    end
+    move.digTo(digPos, "xzy")
+    move.turnTo(digHeading)
+  end
+
+end
+
+-- Drops everything that is not wanted and isn't the bucket
+m.cleanInventory = function ()
+  local bucketSlot = bucket.find()
+  for slot = 1, 16, 1 do
+    if turtle.getItemCount(slot) > 0
+      and slot ~= bucketSlot
+      and not wants(turtle.getItemDetail(slot, true)) then
+        turtle.select(slot)
+        turtle.drop()
+    end
+  end
+end
+
+m.cleave = function(dimensionVector)
+  local homePos = location.getPos()
+  local homeHeading = location.getHeading()
+
+  m.setChest(homePos)
+
+  local success, error = pcall(function()
+    path.rectangleEveryThirdLayer(dimensionVector, function (direction, mustDig)
+
+      m.smartDig(direction, true, homePos, homeHeading)
+
+    end)
+  end)
+  if error then print(error) end
+
+  move.digTo(homePos, "yzx")
+  move.turnTo(homeHeading)
+  m.cleanInventory() -- So we don't drop off stuff picked up on move.digTo
+  m.transferToChest()
+end
+
+m.layerBore = function (dimensionVector)
+  local homePos = location.getPos()
+  local homeHeading = location.getHeading()
+  local toPos = homePos + dimensionVector
+  local lastPosition = homePos
+
+  m.setChest(homePos)
+
+  local success, error = pcall(function()
+    path.rectangleEveryThirdLayer(toPos, function (direction, mustDig)
+      if mustDig and (direction == "Down" or direction == "Up") and foundBedrock then
+        error("Will not do anymore layers because next layer contains bedrock")
+      end
+
+      if m.smartDig(direction, mustDig, homePos, homeHeading) == "BEDROCK" then
+        if mustDig then error("Ran into bedrock, ending") end
+        -- If bedrock will block our escape in the y direction
+        if dimensionVector.y >= 0 and direction == "Down" or dimensionVector.y < 0 and direction == "Up" then
+          move.digTo(lastPosition) -- retreat 1 space and end
+          error("Ending because we might get trapped by bedrock")
+        end
+
+        foundBedrock = true
+      end
+      lastPosition = location.getPos()
+    end)
+  end)
+  if error then print(error) end
+
+  move.digTo(homePos, "yzx")
+  move.turnTo(homeHeading)
+  m.cleanInventory() -- So we don't drop off stuff picked up on move.digTo
+  m.transferToChest()
+
 end
 
 return m

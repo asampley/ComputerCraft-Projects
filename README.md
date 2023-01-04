@@ -1,10 +1,10 @@
 # ComputerCraft-Projects
-ComputerCraft is a Minecraft mod that uses Lua for scripting computers and robots (turtles). This repository contains some work that I've done.
+[ComputerCraft](https://tweaked.cc/) is a Minecraft mod that uses Lua for scripting computers and robots ([turtles](https://tweaked.cc/module/turtle.html). This repository contains some work that I've done.
 
 ## Quick start
-Start a computer and run `wget run https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/bootstrap.lua https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/`. This will run a bootstrap program that will download a library and executable for fetching programs and their dependencies called `wequire`.
+Start a computer and run `wget run https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/bootstrap.lua https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/`. This will run a bootstrap program that will download a library and executable for fetching programs and their dependencies called `werun`.
 
-If you run `wequire bin/routem` for example, it will download bin/routem from this repository (if it does not yet exist), as well as replace all calls of require, adn loadfile with versions that also download form this repository (if they do not yet exist). The caveat is it will not attempt to download all files, just ones pulled in with those functions. Configuration files may be missing.
+If you run `werun bin/routem` for example, it will download bin/routem from this repository (if it does not yet exist), as well as replace all calls of require, and loadfile with versions that also download form this repository (if they do not yet exist). To force re-downloading of all files for the program, use `werun --update bin/routem`.
 
 ## Development
 
@@ -37,4 +37,4 @@ Bonus settings while we are here:
 
 `wget run http://127.0.0.1:5500/bootstrap.lua http://127.0.0.1:5500/`
 
-With this, wequire requests will be routed to the 2nd url.
+With this, `werun` requests will all be sent to the 2nd url.

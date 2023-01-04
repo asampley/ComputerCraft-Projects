@@ -77,7 +77,7 @@ if not _G.location then
   _G.turtle.turnRight = turnRight
 end
 
--- public constants (returned from functions)
+-- public constants for headings (unit vectors for each axis)
 m.X = function() return vector.new(1, 0, 0) end
 m.Y = function() return vector.new(0, 1, 0) end
 m.Z = function() return vector.new(0, 0, 1) end

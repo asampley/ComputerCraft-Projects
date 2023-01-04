@@ -33,7 +33,6 @@ local rules = {
   {false, mtag, "minecraft:.*bricks"},
   {false, name, "mineacraft:.*bricks"},
   {false, tag, "mineacraft:walls"},
-  {false, name, "minecraft:cobblestone"},
   {false, name, "minecraft:cobbled_.*"},
 
   -- common dirt structures
@@ -45,7 +44,8 @@ local rules = {
   {false, tag, "minecraft:slabs"},
 
   -- common overworld
-  {false, tag, "minecraft:base_stone_overworld"},
+  {false, tag, "minecraft:base_stone_overworld"}, -- stone, andestie, granite, etc
+  {false, name, "minecraft:cobblestone"}, -- required for inventory checks
   {false, tag, "minecraft:dirt"},
   {false, name, "minecraft:gravel"},
   {false, tag, "minecraft:sand"},
