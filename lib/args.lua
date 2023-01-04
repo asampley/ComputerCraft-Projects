@@ -8,7 +8,19 @@ local m = {}
       flag2 = "string", -- takes the next argument and stores it in a string
       flag3 = "number", -- takes the next argument and converts it to a number
       flag4 = "count", -- can appear multiple times, the value will be how many times it appeared
-    }
+      flag5 = { type = "boolean" }, -- all the above types can likewise be done like this
+    },
+    -- first n arguments are required
+    required = {
+      { name = "required1", type = "string" } -- first argument is a string
+      { name = "required2", type = "number" } -- second argument is a number
+    },
+    -- next m arguments are optional
+    optional = {
+      { name = "optional1", type = "string" } -- same types as required can be
+    },
+    -- all remaining arguments can optionally be collected into a list with a type
+    rest = { name = "remaining", type = "string" },
   }
   Returns:
   {
@@ -16,6 +28,11 @@ local m = {}
     flag2 = "somestring",
     flag3 = 33,
     flag4 = 2,
+    flag5 = true,
+    required1 = "anotherstring",
+    required2 = 5,
+    optional1 = "mightbehereornot",
+    rest = { "also", "may", "not", "be", "here" },
   }
 ]]--
 m.parse = function(definition, arguments)
