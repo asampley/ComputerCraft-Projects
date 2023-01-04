@@ -1,5 +1,9 @@
 local m = {}
 
+local function bad(definition, message)
+  error(message .. "\n" .. m.usage(definition))
+end
+
 --[[
   definition:
   {
@@ -68,7 +72,7 @@ m.parse = function(definition, arguments)
           flag = definition.flags[short]
 
           if not flag then
-            error("Unknown short form for flag \"" .. short "\"")
+            bad(definition, "Unknown short form for flag \"" .. short "\"")
           end
         end
       end
@@ -78,7 +82,7 @@ m.parse = function(definition, arguments)
         local flagDef = definition.flags[flag]
 
         if not flagDef then
-          error("No definition for flag \"" .. flag .. "\"")
+          bad(definition, "\nNo definition for flag \"" .. flag .. "\"")
         end
 
         if flagDef.type == "boolean" or flagDef == "boolean" then
@@ -91,18 +95,18 @@ m.parse = function(definition, arguments)
           if k then
             args[flag] = v
           else
-            error("Missing value for flag \"" .. flag .. "\"")
+            bad(definition, "\nMissing value for flag \"" .. flag .. "\"")
           end
         elseif flagDef.type == "number" or flagDef == "number" then
           k, v = iter(invariant, k)
 
           if k then
-            args[flag] = tonumber(v) or error("Could not parse number from \"" .. v .. "\"")
+            args[flag] = tonumber(v) or bad(definition, "\nCould not parse number from \"" .. v .. "\"")
           else
-            error("Missing value for flag \"" .. flag .. "\"")
+            bad(definition, "Missing value for flag \"" .. flag .. "\"")
           end
         else
-          error("Unknown type of flag \"" .. flagDef .. "\"")
+          bad(definition, "Unknown type of flag \"" .. flagDef .. "\"")
         end
       else
         local rest = false
@@ -120,19 +124,19 @@ m.parse = function(definition, arguments)
         end
 
         if not posDef then
-          error("Too many arguments supplied")
+          bad(definition, "Too many arguments supplied")
         else
           if not posDef.name then
-            error("'name' not set for positional argument")
+            bad(definition, "'name' not set for positional argument")
           end
 
           local parsed
           if not posDef.type or posDef.type == "string" then
             parsed = v
           elseif posDef.type == "number" then
-            parsed = tonumber(v) or error("Expected number for \"" .. posDef.name .. "\"")
+            parsed = tonumber(v) or bad(definition, "Expected number for \"" .. posDef.name .. "\"")
           else
-            error("Unknown type for positional \"" .. posDef.type .. "\"")
+            bad(definition, "Unknown type for positional \"" .. posDef.type .. "\"")
           end
 
           if rest then
@@ -151,14 +155,14 @@ m.parse = function(definition, arguments)
   end
 
   if definition.required and position <= #definition.required then
-    error("Too few arguments supplied")
+    bad(definition, "Too few arguments supplied")
   end
 
   return args
 end
 
 m.usage = function(definition)
-  local usage = ""
+  local usage = "usage:"
 
   if definition.required then
     for _, def in ipairs(definition.required) do
