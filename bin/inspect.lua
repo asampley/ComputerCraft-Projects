@@ -7,10 +7,12 @@ if #args > 1 then
 end
 
 local direction = args[1]
-if direction ~= "" and direction ~= "Up" and direction ~= "Down" then
+if direction ~= "" and direction ~= "up" and direction ~= "down" then
   print('direction must be "" (forward), "Up", or "Down"')
   return
 end
+
+direction = string.upper(string.sub(direction, 1, 1))..string.sub(direction, 2)
 
 -- Just prints the name of the block in front of turtle
 local found, block = turtle["inspect"..direction]()
