@@ -14,12 +14,15 @@ local m = {}
     required = {
       { name = "required1", type = "string" } -- first argument is a string
       { name = "required2", type = "number" } -- second argument is a number
+      { name = "required3" } -- third argument is a string (as string is the default)
     },
     -- next m arguments are optional
     optional = {
       { name = "optional1", type = "string" } -- same types as required can be
+      { name = "optional2" } -- also defaults to string
     },
     -- all remaining arguments can optionally be collected into a list with a type
+    -- likewise can implicitly be a string
     rest = { name = "remaining", type = "string" },
   }
   Returns:
@@ -31,7 +34,9 @@ local m = {}
     flag5 = true,
     required1 = "anotherstring",
     required2 = 5,
+    required3 = "stringisthedefaulttype",
     optional1 = "mightbehereornot",
+    optional2 = "alsostrings",
     rest = { "also", "may", "not", "be", "here" },
   }
 ]]--
