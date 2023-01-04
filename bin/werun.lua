@@ -7,7 +7,11 @@ local args = require("/lib/args").parse(
   {
     flags = {
       update = "boolean"
-    }
+    },
+    required = {
+      { name = "file" },
+    },
+    rest = { name = "rest" },
   },
   {...}
 )
@@ -16,4 +20,4 @@ require = wequire.require
 loadfile = wequire.loadfile
 wequire.overwrite = args.update == true
 
-wequire.run(_ENV, args[1], table.unpack(args, 2))
+wequire.run(_ENV, args.file, args.rest)
