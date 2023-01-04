@@ -1,5 +1,23 @@
 local m = {}
 
+--[[
+  definition:
+  {
+    flags = {
+      flag1 = "boolean", -- either there or not
+      flag2 = "string", -- takes the next argument and stores it in a string
+      flag3 = "number", -- takes the next argument and converts it to a number
+      flag4 = "count", -- can appear multiple times, the value will be how many times it appeared
+    }
+  }
+  Returns:
+  {
+    flag1 = false,
+    flag2 = "somestring",
+    flag3 = 33,
+    flag4 = 2,
+  }
+]]--
 m.parse = function(definition, arguments)
   local flags = true
 
