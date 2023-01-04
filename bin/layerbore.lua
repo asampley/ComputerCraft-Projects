@@ -1,18 +1,28 @@
 local arguments = require("/lib/args")
 local bore = require("/lib/bore")
 
-local args = {...}
+local args = arguments.parse({
+  flags = {
+    wants = "string",
+    help = "boolean",
+  },
+  required = {
+    { name = "height", type = "number" },
+    { name = "forward", type = "number" },
+    { name = "right", type = "number" },
+  },
+},
+{...})
 
-if #args ~= 3 then
-  print("Usage: layerbore <+/-height> <+/-forward> <+/-right>")
-  print("To dig optimally deep into bedrock, set turtle in Y where Y % 3 == 1")
+if args.help then
+  print("To dig optimally deep into bedrock, place turtle in Y where Y % 3 == 1")
   print("eg. set tutrle in layer 61")
   return
 end
 
-local dimensionVector = arguments.dimensionsToVector(args[1], args[2], args[3])
+local dimensionVector = bore.dimensionsToVector(args.height, args.forward, args.right)
 
 local startTime = os.clock()
-bore.layerBore(dimensionVector)
+bore.layerBore(dimensionVector, args)
 local timeTaken = (os.clock() - startTime) / 60
 print("Finished in "..timeTaken.." minutes")

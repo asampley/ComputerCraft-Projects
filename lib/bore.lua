@@ -4,12 +4,12 @@ local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
 local path = require("/lib/path")
+local wants = require("/lib/bore/wants")
 
 local m = {}
 
 -- load config files to determine blocks to search for and items to refuel with
 local config = require("/lib/config")
-local wants = config.load("bore/wants")
 local fuel = config.load("bore/fuel")
 
 -- record chest location
@@ -22,7 +22,7 @@ end
 -- check if block is wanted
 m.wanted = function(inspectFunc)
   local found, block = inspectFunc()
-  return found and wants(block)
+  return found and wants.wants(block)
 end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
@@ -154,6 +154,7 @@ local function expand(minPosition, maxPosition, shaft)
 end
 
 m.go = function(position, depth, minPosition, maxPosition)
+  wants.setProfile()
   init(position)
 
   move.digTo(position)
@@ -326,7 +327,7 @@ m.smartDig = function(direction, alwaysDig, homePos, homeHeading)
   local found, block = turtle["inspect"..direction]()
   if not found then return end
   if blocks.isBedrock(block) then return "BEDROCK" end
-  if not alwaysDig and not wants(block) then return end -- Don't want it
+  if not alwaysDig and not wants.wants(block) then return end -- Don't want it
   -- Otherwise we want it, or we need to alwaysDig ittry to dig it
   if not turtle["dig"..direction]() then return end -- Nothing to dig
   -- need to clear all falling blocks if we're trying to move in that direction
@@ -379,14 +380,15 @@ m.cleanInventory = function ()
   for slot = 1, 16, 1 do
     if turtle.getItemCount(slot) > 0
       and slot ~= bucketSlot
-      and not wants(turtle.getItemDetail(slot, true)) then
+      and not wants.wants(turtle.getItemDetail(slot, true)) then
         turtle.select(slot)
         turtle.drop()
     end
   end
 end
 
-m.cleave = function(dimensionVector)
+m.cleave = function(dimensionVector, options)
+  wants.setProfile(options.wants)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
 
@@ -407,7 +409,8 @@ m.cleave = function(dimensionVector)
   m.transferToChest()
 end
 
-m.layerBore = function (dimensionVector)
+m.layerBore = function (dimensionVector, options)
+  wants.setProfile(options.wants)
   local homePos = location.getPos()
   local homeHeading = location.getHeading()
   local toPos = homePos + dimensionVector

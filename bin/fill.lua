@@ -11,7 +11,7 @@ if #args < 3 or #args > 4 then
   return
 end
 
-local dimensionVector = arguments.dimensionsToVector(args[1], args[2], args[3])
+local dimensionVector = bore.dimensionsToVector(args[1], args[2], args[3])
 local placeDir = args[4]
 
 if dimensionVector.y >= 0 and not placeDir then

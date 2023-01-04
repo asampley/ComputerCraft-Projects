@@ -27,6 +27,7 @@ m.filter = {
 --
 -- The first filter that returns true returns
 -- the corresponding value of map
+-- Returns true or false if a matching filter was found, else nil
 m.map = function(block, filters)
   for _, v in ipairs(filters) do
     local map = v[1]
