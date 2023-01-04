@@ -15,11 +15,12 @@ local dimensionVector = arguments.dimensionsToVector(args[1], args[2], args[3])
 local placeDir = args[4]
 
 if dimensionVector.y >= 0 and not placeDir then
-  placeDir = "Down" -- place below turtle as it will be moving up
+  placeDir = "down" -- place below turtle as it will be moving up
 else
-  placeDir = "Up"
+  placeDir = "up"
 end
-if placeDir ~= "Up" and placeDir ~= "Down" then error("placecDirection must be 'Up' or 'Down'") end
+if placeDir ~= "up" and placeDir ~= "down" then error("placecDirection must be 'up' or 'down'") end
+placeDir = string.upper(string.sub(placeDir, 1, 1))..string.sub(placeDir, 2)
 if dimensionVector.y >= 0 and placeDir ~= "Down" then print("placeDirection should probably be 'Down' when filling a positive height") end
 if dimensionVector.y < 0 and placeDir ~= "Up" then print("placeDirection should probably be 'Up' when filling a negative height ") end
 
