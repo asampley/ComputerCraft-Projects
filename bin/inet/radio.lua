@@ -6,7 +6,11 @@ local synth = require("/lib/synth")
 
 local config = require("/lib/config").load("radio")
 
-local args = require("/lib/args").parse({}, {...})
+local args = require("/lib/args").parse({
+  required = {
+    { name = "songs" }
+  },
+}, {...})
 
 local play, stop
 local notes = {}
@@ -106,16 +110,16 @@ local function broadcast(midiFile)
   radio.loopback.stopAll()
 end
 
-if fs.isDir(args[1]) then
-  local files = fs.list(args[1])
+if fs.isDir(args.songs) then
+  local files = fs.list(args.songs)
 
   while true do
     local i = math.random(#files)
-    local file = args[1] .. "/" .. files[i]
+    local file = args.songs .. "/" .. files[i]
     print("Playing " .. i .. "/" .. #files .. ": " .. file)
     broadcast(file)
   end
 else
-  print("Playing " .. args[1])
-  broadcast(args[1])
+  print("Playing " .. args.songs)
+  broadcast(args.songs)
 end
