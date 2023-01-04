@@ -1,7 +1,7 @@
 local args = {...}
 
-if #args ~= 1 then
-    print("Usage: bootstrap <raw repo url>")
+if #args < 1 then
+    print("Usage: bootstrap <raw repo url> [<fallback url 1> <fallback url 2> ...]")
     return
 end
 
@@ -22,7 +22,7 @@ for _, file in ipairs({
 end
 
 local handle = fs.open("/etc/wequire.lua", "w")
-handle.write("return {\n  '" .. baseUrl .. "',\n}")
+handle.write("return {\n  '" .. table.concat(args, "',\n  '")  .. "',\n}")
 handle.close()
 
 local wequire = require("/lib/wequire")
