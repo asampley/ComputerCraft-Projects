@@ -7,8 +7,6 @@ local recv = {}
 
 local speaker = peripheral.find("speaker")
 
-local args = require("/lib/args").parse({ mode = "string" }, { ... })
-
 local notes = {}
 local wave
 
