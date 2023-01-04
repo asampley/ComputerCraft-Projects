@@ -20,4 +20,4 @@ require = wequire.require
 loadfile = wequire.loadfile
 wequire.overwrite = args.update == true
 
-wequire.run(_ENV, args.file, args.rest)
+wequire.run(_ENV, args.file, table.unpack(args.rest))

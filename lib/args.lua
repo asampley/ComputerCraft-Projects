@@ -164,22 +164,6 @@ end
 m.usage = function(definition)
   local usage = "usage:"
 
-  if definition.required then
-    for _, def in ipairs(definition.required) do
-      usage = usage .. " " .. def.name
-    end
-  end
-
-  if definition.optional then
-    for _, def in ipairs(definition.optional) do
-      usage = usage .. " [" .. def.name .. "]"
-    end
-  end
-
-  if definition.rest then
-    usage = usage .. " [" .. definition.rest.name .. "...]"
-  end
-
   for flag, def in pairs(definition.flags) do
     if #flag > 1 then
       usage = usage .. " [--" .. flag
@@ -194,6 +178,26 @@ m.usage = function(definition)
     end
 
     usage = usage .. "]"
+  end
+
+  if definition.required or definition.optional or definition.rest then
+    usage = usage .. " [--]"
+  end
+
+  if definition.required then
+    for _, def in ipairs(definition.required) do
+      usage = usage .. " " .. def.name
+    end
+  end
+
+  if definition.optional then
+    for _, def in ipairs(definition.optional) do
+      usage = usage .. " [" .. def.name .. "]"
+    end
+  end
+
+  if definition.rest then
+    usage = usage .. " [" .. definition.rest.name .. "...]"
   end
 
   return usage
