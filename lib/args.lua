@@ -164,20 +164,22 @@ end
 m.usage = function(definition)
   local usage = "usage:"
 
-  for flag, def in pairs(definition.flags) do
-    if #flag > 1 then
-      usage = usage .. " [--" .. flag
-    else
-      usage = usage .. " [-" .. flag
-    end
+  if definition.flags then
+    for flag, def in pairs(definition.flags) do
+      if #flag > 1 then
+        usage = usage .. " [--" .. flag
+      else
+        usage = usage .. " [-" .. flag
+      end
 
-    if def == "string" or def.type == "string" then
-      usage = usage .. " STRING"
-    elseif def == "number" or def.type == "number" then
-      usage = usage .. " NUMBER"
-    end
+      if def == "string" or def.type == "string" then
+        usage = usage .. " STRING"
+      elseif def == "number" or def.type == "number" then
+        usage = usage .. " NUMBER"
+      end
 
-    usage = usage .. "]"
+      usage = usage .. "]"
+    end
   end
 
   if definition.required or definition.optional or definition.rest then

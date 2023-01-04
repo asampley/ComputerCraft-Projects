@@ -11,7 +11,7 @@ local args = require("/lib/args").parse(
     required = {
       { name = "file" },
     },
-    rest = { name = "rest" },
+    rest = { name = "args" },
   },
   {...}
 )
@@ -20,4 +20,4 @@ require = wequire.require
 loadfile = wequire.loadfile
 wequire.overwrite = args.update == true
 
-wequire.run(_ENV, args.file, table.unpack(args.rest))
+wequire.run(_ENV, args.file, table.unpack(args.args or {}))
