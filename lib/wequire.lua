@@ -29,6 +29,10 @@ m.fetch = function(file)
 end
 
 m.require = function(file)
+  if package.loaded[file] then
+    return package.loaded[file]
+  end
+
   if not m.overwrite then
     local ok, val = pcall(_require, file)
 
@@ -48,14 +52,12 @@ end
 
 m.run = function(env, file, ...)
   if not m.overwrite then
-    local f = m.loadfile(file, "bt", env)
+    local f = _loadfile(file, "bt", env)
 
     if f then return f(...) end
   end
 
-  local fetchList = {}
-
-  fetchList[#fetchList + 1] = file
+  local fetchList = { file }
 
   for p in shell.path():gmatch("[^:]+") do
     if fs.getDrive(p) ~= "rom" then
@@ -63,7 +65,7 @@ m.run = function(env, file, ...)
         local ppp = p .. "/" .. pp
 
         if not m.overwrite then
-          local f = m.loadfile(ppp, "bt", env)
+          local f = _loadfile(ppp, "bt", env)
 
           if f then return f(...) end
         end
