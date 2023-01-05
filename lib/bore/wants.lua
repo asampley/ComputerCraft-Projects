@@ -48,4 +48,7 @@ m.wants = function(block)
   return want
 end
 
+-- Try to set a default profile
+wants.setProfile()
+
 return m

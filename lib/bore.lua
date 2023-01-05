@@ -154,7 +154,6 @@ local function expand(minPosition, maxPosition, shaft)
 end
 
 m.go = function(position, depth, minPosition, maxPosition)
-  wants.setProfile()
   init(position)
 
   move.digTo(position)
