@@ -46,11 +46,11 @@ m.require = function(file)
   error("Unable to find file locally or online")
 end
 
-m.loadfile = function(file, mode, env)
+m.run = function(env, file, ...)
   if not m.overwrite then
-    local f = _loadfile(file, mode, env)
+    local f = m.loadfile(file, "bt", env)
 
-    if f then return f end
+    if f then return f(...) end
   end
 
   local fetchList = {}
@@ -63,9 +63,9 @@ m.loadfile = function(file, mode, env)
         local ppp = p .. "/" .. pp
 
         if not m.overwrite then
-          local f = _loadfile(ppp, mode, env)
+          local f = m.loadfile(ppp, "bt", env)
 
-          if f then return f end
+          if f then return f(...) end
         end
 
         fetchList[#fetchList + 1] = ppp
@@ -75,20 +75,24 @@ m.loadfile = function(file, mode, env)
 
   for _, fet in ipairs(fetchList) do
     if m.fetch(fet) then
-      return _loadfile(fet, mode, env)
+      local f = m.loadfile(fet, "bt", env)
+
+      if f then return f(...) end
     end
   end
-
-  return nil, "Unable to find file '" .. file .. "' locally or online"
 end
 
-m.run = function(env, file, ...)
-  local f, err = m.loadfile(file, "bt", env)
+m.loadfile = function(file, mode, env)
+  if not m.overwrite then
+    local f = _loadfile(file, mode, env)
 
-  if f then
-    return f(...)
+    if f then return f end
+  end
+
+  if m.fetch(file) then
+    return _loadfile(file, mode, env)
   else
-    error(err)
+    return nil, "Unable to find file '" .. file .. "' locally or online"
   end
 end
 
