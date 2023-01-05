@@ -63,10 +63,10 @@ m.parse = function(definition, arguments)
       flags = false
     else
       -- check for long flags and then short flags
-      local flag = v:match("^%-%-(.+)$")
+      local flag = v:match("^%-%-(%a%w*)$")
 
       if not flag then
-        local short = v:match("^%-(.)$")
+        local short = v:match("^%-(%a)$")
 
         if short then
           flag = definition.flags[short]
