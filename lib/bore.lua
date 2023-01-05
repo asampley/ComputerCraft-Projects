@@ -314,7 +314,17 @@ m.dimensionsToVector = function (forward, height, right)
     -- Decrement magnitude by 1 so that the to position is correct
     dimensions[dimension] = value - value/math.abs(value)
   end
-  return vector.new(dimensions.forward, dimensions.height, dimensions.right)
+
+  local heading = location.getHeading()
+  if heading.x > 0 then
+    return vector.new(dimensions.forward, dimensions.height, dimensions.right)
+  elseif heading.x < 0 then
+    return vector.new(-dimensions.forward, dimensions.height, -dimensions.right)
+  elseif heading.z > 0 then
+    return vector.new(-dimensions.right, dimensions.height, dimensions.forward)
+  elseif heading.z < 0 then
+    return vector.new(dimensions.right, dimensions.height, -dimensions.forward)
+  end
 end
 
 -- direction is "" for forward, "Down", or "Up"
