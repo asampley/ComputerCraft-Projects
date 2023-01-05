@@ -8,7 +8,7 @@ If you run `werun bin/routem` for example, it will download bin/routem from this
 
 # Development
 
-## Tips
+## Computer/Turtle Tips
 
 For single player worlds you can set infinite fule.
 
@@ -20,22 +20,21 @@ For single player worlds you can set infinite fule.
 	need_fuel = false
 ```
 
-## Development (recommended) - linked file system to turtle
+## Full Repo Development
 
-### 1. Create a computer or turtle
-* In your minecraft world, create a computer or turtle, give it a name? `set name hiya`
-* If you break and pick up your computer/turtle, in your inventory if you hover over the item you can check the the `ID: <number>`
-* disconnect from the server
+Clone the repo anywhere.
 
-### 2. Create link between repo and computer/turtle
-* clone the repo anywhere
-* Windows
-  * Navigate to `%AppData%\.minecraft\saves\<world>\computercraft\computer\`
-  * Delete the folder that corresponds to `ID: <number>`
-  * Open an administrator cmd prompt in the `computercraft\computer\` folder: `mklink /D "<ID number>" "<path to ComputerCraft-Projects repo>"`
-* Now if you go into your computer/turtle and run `ls` you will see all the files (they are dynamically linked)
+If it is a single player world navigate to your world save folder, and look in `/computercraft/computer`.
+ - For windows this is in `%appdata%\.minecraft\saves\<world>\`
 
-## Development (alternative) - local server
+Delete the folder that corresponds to the computer's id in game. (`ID: <number>`)
+
+Make a symlink to the repo which replaces the deleted folder:
+- [Windows] From an administrator cmd prompt: `mklink /D "%appdata%\.minecraft\saves\<world>\computercraft\computer\<ID number>" "<path to ComputerCraft-Projects repo>"`
+
+The computer/turtle now has access to your repo in it's filesystem.
+
+## Wequire Development
 
 ### 1. Start a local server
 Any way you want to do it is fine.
