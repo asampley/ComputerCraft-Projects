@@ -20,7 +20,7 @@ if args.help then
   return
 end
 
-local dimensionVector = bore.dimensionsToVector(args.height, args.forward, args.right)
+local dimensionVector = bore.dimensionsToVector(args.forward, args.height, args.right)
 
 local startTime = os.clock()
 bore.layerBore(dimensionVector, args)

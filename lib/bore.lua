@@ -301,7 +301,7 @@ end
 -- Creates a movement vector which includes the starting block in the vector
 -- (so we need minus 1 magnitude off each dimension)
 -- Checks and converts dimensions to numbers
-m.dimensionsToVector = function (height, forward, right)
+m.dimensionsToVector = function (forward, height, right)
   local dimensions = {
     height = height,
     forward = forward,

@@ -1,31 +1,50 @@
 local arguments = require("/lib/args")
-local inventory = require("/lib/inventory")
+local bore = require("/lib/bore")
 local location = require("/lib/location")
+local move = require("/lib/move")
 local path = require("/lib/path")
 
-local args = {...}
+local args = arguments.parse({
+  flags = {
+    wants = "string",
+    help = "boolean",
+  },
+  required = {
+    { name = "height", type = "number" },
+    { name = "forward", type = "number" },
+    { name = "right", type = "number" },
+  },
+  optional = {
+    { name = "placeDirection", type = "string" }
+  }
+},
+{...})
 
-if #args < 3 or #args > 4 then
-  print("Usage: fill <+/-height> <+/-forward> <+/-right> [<placecDirection>]")
-  print("Will place whatever block is in the inventory 'Up' or 'Down'")
+if args.help then
+  print("Will place whatever block is in the inventory 'up' or 'down'")
   return
 end
 
-local dimensionVector = bore.dimensionsToVector(args[1], args[2], args[3])
-local placeDir = args[4]
 
-if dimensionVector.y >= 0 and not placeDir then
-  placeDir = "down" -- place below turtle as it will be moving up
-else
-  placeDir = "up"
+local dimensionVector = bore.dimensionsToVector(args.forward, args.height, args.right)
+local placeDir = args.placeDirection
+
+if not placeDir then
+  if dimensionVector.y >= 0 then
+    placeDir = "down" -- place below turtle as it will be moving up
+  else
+    placeDir = "up"
+  end
 end
+
 if placeDir ~= "up" and placeDir ~= "down" then error("placecDirection must be 'up' or 'down'") end
 placeDir = string.upper(string.sub(placeDir, 1, 1))..string.sub(placeDir, 2)
 if dimensionVector.y >= 0 and placeDir ~= "Down" then print("placeDirection should probably be 'Down' when filling a positive height") end
 if dimensionVector.y < 0 and placeDir ~= "Up" then print("placeDirection should probably be 'Up' when filling a negative height ") end
 
 
-local toPos = location.getPos() + dimensionVector
+local startPos = location.getPos()
+local startHeading = location.getHeading()
 
 local slot = 1
 turtle.select(slot)
@@ -40,4 +59,6 @@ path.rectangleSimple(toPos, function (direction)
   return true
 end)
 
-inventory.setAutoRefill(false)
+startPos.y = location.getPos().y
+move.goTo(startPos)
+move.turnTo(startHeading)

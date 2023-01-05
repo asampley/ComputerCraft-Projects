@@ -11,7 +11,7 @@ local args = arguments.parse({
   },
   {...})
 
-local dimensionVector = bore.dimensionsToVector(args.height, args.forward, args.right)
+local dimensionVector = bore.dimensionsToVector(args.forward, args.height, args.right)
 
 local startTime = os.clock()
 
