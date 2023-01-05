@@ -6,7 +6,18 @@ Start a computer and run `wget run https://raw.githubusercontent.com/asampley/Co
 
 If you run `werun bin/routem` for example, it will download bin/routem from this repository (if it does not yet exist), as well as replace all calls of require, and loadfile with versions that also download form this repository (if they do not yet exist). To force re-downloading of all files for the program, use `werun --update bin/routem`.
 
-## Development
+## Full Repo Development
+
+### 1. Clone the repo to your computer
+
+If it is a single player world navigate to your world save folder, and look in `/computercraft/computer`.
+ - For windows this is in `%appdata%\.minecraft\saves\<world>\`
+
+Pick whichever numbered folder you want, corresponding to the computer's id in game.
+
+Clone the repo directly into that folder. Make and push changes as you need in your favorite editor.
+
+## Wequire Development
 
 ### 1. Start a local server
 Any way you want to do it is fine.
