@@ -6,6 +6,20 @@ Start a computer and run `wget run https://raw.githubusercontent.com/asampley/Co
 
 If you run `werun bin/routem` for example, it will download bin/routem from this repository (if it does not yet exist), as well as replace all calls of require, and loadfile with versions that also download form this repository (if they do not yet exist). To force re-downloading of all files for the program, use `werun --update bin/routem`.
 
+# Development
+
+## Tips
+
+For single player worlds you can set infinite fule.
+
+`%AppData%\.minecraft\saves\<world>\serverconfig\computercraft-server.toml`
+
+```
+[turtle]
+	#Set whether Turtles require fuel to move.
+	need_fuel = false
+```
+
 ## Development (recommended) - linked file system to turtle
 
 ### 1. Create a computer or turtle
@@ -39,13 +53,6 @@ Change `deny` to `allow` in
 [[http.rules]]
     host = "$private"
     action = "deny"
-```
-
-Bonus settings while we are here:
-```
-[turtle]
-	#Set whether Turtles require fuel to move.
-	need_fuel = false
 ```
 
 ### 3. Bootstrap to your local server
