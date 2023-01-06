@@ -51,8 +51,7 @@ and the next layer is the top.
 --]]
 
 --[[
-Read a blueprint, return
-width, depth, height, design, invMap, commentMap}
+Read and return a blueprint
 --]]
 local function readBlueprint(fileName)
   local bp = blueprint.new()
@@ -72,13 +71,12 @@ local function readBlueprint(fileName)
   local width = tonumber(dimStrings[1])
   local depth = tonumber(dimStrings[2])
   local height = tonumber(dimStrings[3])
-  bp:add_volume(0, width - 1, 0, height - 1, 0, depth - 1)
+  bp:add_volume(blueprint.volume.cuboid_filled(0, width - 1, 0, height - 1, 0, depth - 1))
 
   local invSlot = 1
   -- read all symbol and slot pairs
   local symbolLine = nil
-  bp.invMap = {}
-  bp.commentMap = {}
+  bp.symbols = {}
   while true do
     symbolLine = file.readLine()
     lineNumber = lineNumber + 1
@@ -89,8 +87,10 @@ local function readBlueprint(fileName)
 
     local symbol, comment = symbolLine:match("(.) (.*)")
 
-    bp.invMap[symbol] = invSlot
-    bp.commentMap[symbol] = comment
+    bp.symbols[symbol] = {
+      slot = invSlot,
+      comment = comment,
+    }
 
     invSlot = invSlot + 1
   end
@@ -182,7 +182,7 @@ local function build(bp)
         local block = bp:get_block(xi, yi, zi)
 
         if block ~= blueprint.AIR then
-          local slot = bp.invMap[block]
+          local slot = bp.symbols[block].slot
           turtle.select(slot)
 
           -- place a block down
@@ -228,9 +228,9 @@ print("  inventory:")
 local counts = bp:counts()
 local i = 1
 while i <= 16 do
-  for symbol, slot in pairs(bp.invMap) do
-    if slot == i then
-      local text = "    " .. symbol .. "->" .. slot .. " " .. bp.commentMap[symbol]
+  for symbol, info in pairs(bp.symbols) do
+    if info.slot == i then
+      local text = "    " .. symbol .. "->" .. info.slot .. " " .. info.comment
         .. " x" .. counts[symbol]
 
       if counts[symbol] > 64 then
