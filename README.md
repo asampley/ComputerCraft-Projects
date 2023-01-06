@@ -6,16 +6,33 @@ Start a computer and run `wget run https://raw.githubusercontent.com/asampley/Co
 
 If you run `werun bin/routem` for example, it will download bin/routem from this repository (if it does not yet exist), as well as replace all calls of require, and loadfile with versions that also download form this repository (if they do not yet exist). To force re-downloading of all files for the program, use `werun --update bin/routem`.
 
+# Development
+
+## Computer/Turtle Tips
+
+For single player worlds you can set infinite fule.
+
+`%AppData%\.minecraft\saves\<world>\serverconfig\computercraft-server.toml`
+
+```
+[turtle]
+	#Set whether Turtles require fuel to move.
+	need_fuel = false
+```
+
 ## Full Repo Development
 
-### 1. Clone the repo to your computer
+Clone the repo anywhere.
 
 If it is a single player world navigate to your world save folder, and look in `/computercraft/computer`.
  - For windows this is in `%appdata%\.minecraft\saves\<world>\`
 
-Pick whichever numbered folder you want, corresponding to the computer's id in game.
+Delete the folder that corresponds to the computer's id in game. (`ID: <number>`)
 
-Clone the repo directly into that folder. Make and push changes as you need in your favorite editor.
+Make a symlink to the repo which replaces the deleted folder:
+- [Windows] From an administrator cmd prompt: `mklink /D "%appdata%\.minecraft\saves\<world>\computercraft\computer\<ID number>" "<path to ComputerCraft-Projects repo>"`
+
+The computer/turtle now has access to your repo in it's filesystem.
 
 ## Wequire Development
 
@@ -35,13 +52,6 @@ Change `deny` to `allow` in
 [[http.rules]]
     host = "$private"
     action = "deny"
-```
-
-Bonus settings while we are here:
-```
-[turtle]
-	#Set whether Turtles require fuel to move.
-	need_fuel = false
 ```
 
 ### 3. Bootstrap to your local server

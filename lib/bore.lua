@@ -4,12 +4,12 @@ local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
 local path = require("/lib/path")
+local wants = require("/lib/bore/wants")
 
 local m = {}
 
 -- load config files to determine blocks to search for and items to refuel with
 local config = require("/lib/config")
-local wants = config.load("bore/wants")
 local fuel = config.load("bore/fuel")
 
 -- record chest location
@@ -22,7 +22,7 @@ end
 -- check if block is wanted
 m.wanted = function(inspectFunc)
   local found, block = inspectFunc()
-  return found and wants(block)
+  return found and wants.wants(block)
 end
 
 local function bruteDig(moveFunc, digFunc, inspectFunc)
@@ -297,6 +297,35 @@ m.advance = function()
   return true
 end
 
+-- Creates a movement vector which includes the starting block in the vector
+-- (so we need minus 1 magnitude off each dimension)
+-- Checks and converts dimensions to numbers
+m.dimensionsToVector = function (forward, height, right)
+  local dimensions = {
+    height = height,
+    forward = forward,
+    right = right,
+  }
+  for dimension, value in pairs(dimensions) do
+    value = tonumber(value)
+    if value == nil then error(dimension.." must be an integer") end
+    if value == 0 then error("0 for "..dimension..", nothing to do") end
+    -- Decrement magnitude by 1 so that the to position is correct
+    dimensions[dimension] = value - value/math.abs(value)
+  end
+
+  local heading = location.getHeading()
+  if heading.x > 0 then
+    return vector.new(dimensions.forward, dimensions.height, dimensions.right)
+  elseif heading.x < 0 then
+    return vector.new(-dimensions.forward, dimensions.height, -dimensions.right)
+  elseif heading.z > 0 then
+    return vector.new(-dimensions.right, dimensions.height, dimensions.forward)
+  elseif heading.z < 0 then
+    return vector.new(dimensions.right, dimensions.height, -dimensions.forward)
+  end
+end
+
 -- direction is "" for forward, "Down", or "Up"
 -- Will attempt to pick up lava and refuel, then
 -- dig the space in front, check the inventory item against
@@ -307,7 +336,7 @@ m.smartDig = function(direction, alwaysDig, homePos, homeHeading)
   local found, block = turtle["inspect"..direction]()
   if not found then return end
   if blocks.isBedrock(block) then return "BEDROCK" end
-  if not alwaysDig and not wants(block) then return end -- Don't want it
+  if not alwaysDig and not wants.wants(block) then return end -- Don't want it
   -- Otherwise we want it, or we need to alwaysDig ittry to dig it
   if not turtle["dig"..direction]() then return end -- Nothing to dig
   -- need to clear all falling blocks if we're trying to move in that direction
@@ -360,68 +389,11 @@ m.cleanInventory = function ()
   for slot = 1, 16, 1 do
     if turtle.getItemCount(slot) > 0
       and slot ~= bucketSlot
-      and not wants(turtle.getItemDetail(slot, true)) then
+      and not wants.wants(turtle.getItemDetail(slot, true)) then
         turtle.select(slot)
         turtle.drop()
     end
   end
-end
-
-m.cleave = function(dimensionVector)
-  local homePos = location.getPos()
-  local homeHeading = location.getHeading()
-
-  m.setChest(homePos)
-
-  local success, error = pcall(function()
-    path.rectangleEveryThirdLayer(dimensionVector, function (direction, mustDig)
-
-      m.smartDig(direction, true, homePos, homeHeading)
-
-    end)
-  end)
-  if error then print(error) end
-
-  move.digTo(homePos, "yzx")
-  move.turnTo(homeHeading)
-  m.cleanInventory() -- So we don't drop off stuff picked up on move.digTo
-  m.transferToChest()
-end
-
-m.layerBore = function (dimensionVector)
-  local homePos = location.getPos()
-  local homeHeading = location.getHeading()
-  local toPos = homePos + dimensionVector
-  local lastPosition = homePos
-
-  m.setChest(homePos)
-
-  local success, error = pcall(function()
-    path.rectangleEveryThirdLayer(toPos, function (direction, mustDig)
-      if mustDig and (direction == "Down" or direction == "Up") and foundBedrock then
-        error("Will not do anymore layers because next layer contains bedrock")
-      end
-
-      if m.smartDig(direction, mustDig, homePos, homeHeading) == "BEDROCK" then
-        if mustDig then error("Ran into bedrock, ending") end
-        -- If bedrock will block our escape in the y direction
-        if dimensionVector.y >= 0 and direction == "Down" or dimensionVector.y < 0 and direction == "Up" then
-          move.digTo(lastPosition) -- retreat 1 space and end
-          error("Ending because we might get trapped by bedrock")
-        end
-
-        foundBedrock = true
-      end
-      lastPosition = location.getPos()
-    end)
-  end)
-  if error then print(error) end
-
-  move.digTo(homePos, "yzx")
-  move.turnTo(homeHeading)
-  m.cleanInventory() -- So we don't drop off stuff picked up on move.digTo
-  m.transferToChest()
-
 end
 
 return m
