@@ -1,8 +1,7 @@
 local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
-
-local air = "."
+local blueprint = require("/lib/blueprint")
 
 --[[
 
@@ -17,10 +16,10 @@ the following way (replace <...> with
 value, use symbols in blueprint):
 
   <width> <depth> <height>
-  <symbol1> <invSlot1>
-  <symbol2> <invSlot2>
+  <symbol1>
+  <symbol2>
   ...
-  <symbolN> <invSlotN>
+  <symbolN>
   Blueprint:
   <blueprint goes here>
 
@@ -31,8 +30,8 @@ may look something like this (note: "."
 is the symbol for nothing):
 
   4 3 2
-  A 1 Comment for A
-  B 2 Comment for B
+  A Comment for A
+  B Comment for B
   Blueprint:
   AAAA
   AAAA
@@ -56,7 +55,7 @@ Read a blueprint, return
 width, depth, height, design, invMap, commentMap}
 --]]
 local function readBlueprint(fileName)
-  local blueprint = {}
+  local bp = blueprint.new()
   local lineNumber = 0
   local file = fs.open(fileName, "r")
   if not file
@@ -70,59 +69,51 @@ local function readBlueprint(fileName)
   local dimStrings = {}
   dimensions:gsub("%d+", function(i) table.insert(dimStrings, i) end)
 
-  blueprint.width = tonumber(dimStrings[1])
-  blueprint.depth = tonumber(dimStrings[2])
-  blueprint.height = tonumber(dimStrings[3])
+  local width = tonumber(dimStrings[1])
+  local depth = tonumber(dimStrings[2])
+  local height = tonumber(dimStrings[3])
+  bp:add_volume(0, width - 1, 0, height - 1, 0, depth - 1)
 
+  local invSlot = 1
   -- read all symbol and slot pairs
   local symbolLine = nil
-  blueprint.invMap = {}
-  blueprint.commentMap = {}
-  while symbolLine ~= "Blueprint:" do
+  bp.invMap = {}
+  bp.commentMap = {}
+  while true do
     symbolLine = file.readLine()
     lineNumber = lineNumber + 1
-    local symbol = symbolLine:sub(1, 1)
-    local nextSpace = symbolLine:find(" ", 3)
-    print(nextSpace)
-    if not nextSpace
-    then
-      nextSpace = -1
-    end
-    local invSlot = tonumber(symbolLine:sub(3, nextSpace))
-    local comment = symbolLine:sub(nextSpace + 1)
 
-    blueprint.invMap[symbol] = invSlot
-    blueprint.commentMap[symbol] = comment
+    if not symbolLine or symbolLine == "Blueprint:" then
+      break
+    end
+
+    local symbol, comment = symbolLine:match("(.) (.*)")
+
+    bp.invMap[symbol] = invSlot
+    bp.commentMap[symbol] = comment
+
+    invSlot = invSlot + 1
   end
 
   -- read blueprint
   local blueprintLine = nil
-  blueprint.design = {}
 
-  for x = 0, blueprint.width - 1 do
-    blueprint.design[x] = {}
-    for y = 0, blueprint.height - 1 do
-      blueprint.design[x][y] = {}
-    end
-  end
-
-
-  for y = 0, blueprint.height - 1 do
-    for z = 0, blueprint.depth - 1 do
+  for y = 0, height - 1 do
+    for z = 0, depth - 1 do
       blueprintLine = file.readLine()
       lineNumber = lineNumber + 1
       if not blueprintLine
       then
         error("at line " .. lineNumber .. ": number of lines in block does not match depth")
-      elseif blueprintLine:len() ~= blueprint.width
+      elseif blueprintLine:len() ~= width
       then
         error("at line " .. lineNumber .. ":" ..
           "\nline is not the same as <width>" ..
-          "\nExpected: " .. blueprint.width ..
+          "\nExpected: " .. width ..
           "\nGot: " .. blueprintLine:len())
       end
-      for x = 0, blueprint.width - 1 do
-        blueprint.design[x][y][z] = blueprintLine:sub(x + 1, x + 1)
+      for x = 0, width - 1 do
+        bp:set_block(x, y, z, blueprintLine:sub(x + 1, x + 1))
       end
 
     end
@@ -131,7 +122,7 @@ local function readBlueprint(fileName)
     lineNumber = lineNumber + 1
   end
 
-  return blueprint
+  return bp
 end
 
 --[[
@@ -143,7 +134,7 @@ up to complete the next planes and
 complete the structure
 
 --]]
-local function build(blueprint)
+local function build(bp)
   local start = location.getPos()
   local forward = location.getHeading()
   turtle.turnRight()
@@ -155,18 +146,27 @@ local function build(blueprint)
   local invertX = false
   local invertZ = false
   local xi, yi, zi = 0, 0, 0
-  for y = 0, blueprint.height - 1 do
+
+  assert(#bp.volumes == 1, "Multiple volumes unsupported")
+
+  local volume = bp.volumes[1]
+  assert(
+    volume.x0 == 0 and volume.y0 == 0 and volume.z0 == 0,
+    "Blueprint does not start at 0, 0, 0"
+  )
+
+  for y = 0, volume.y1 do
     local yi = y
-    for x = 0, blueprint.width - 1 do
+    for x = 0, volume.x1 do
       if invertX then
-        xi = blueprint.width - 1 - x
+        xi = volume.x1 - x
       else
         xi = x
       end
 
-      for z = 0, blueprint.depth - 1 do
+      for z = 0, volume.z1 do
         if invertZ then
-          zi = blueprint.depth - 1 - z
+          zi = volume.z1 - z
         else
           zi = z
         end
@@ -179,11 +179,10 @@ local function build(blueprint)
         turtle.digDown()
 
         -- select correct inventory slot
-        local block = blueprint.design[xi][yi][zi]
+        local block = bp:get_block(xi, yi, zi)
 
-        if block ~= air
-        then
-          local slot = blueprint.invMap[block]
+        if block ~= blueprint.AIR then
+          local slot = bp.invMap[block]
           turtle.select(slot)
 
           -- place a block down
@@ -215,19 +214,37 @@ then
 end
 
 local fileName = args[1]
-local blueprint = readBlueprint(fileName)
+local bp = readBlueprint(fileName)
 
-if not blueprint then
+if not bp then
   error("Unable to read blueprint "..fileName)
 end
 
 print("Loaded blueprint:")
-print("  width=  " .. blueprint.width)
-print("  depth=  " .. blueprint.depth)
-print("  height= " .. blueprint.height)
+print("  width=  " .. bp.volumes[1].x1 + 1)
+print("  depth=  " .. bp.volumes[1].y1 + 1)
+print("  height= " .. bp.volumes[1].z1 + 1)
 print("  inventory:")
-for symbol, slot in pairs(blueprint.invMap) do
-  print("    " .. symbol .. "->" .. slot .. " " .. blueprint.commentMap[symbol])
+local counts = bp:counts()
+local i = 1
+while i <= 16 do
+  for symbol, slot in pairs(bp.invMap) do
+    if slot == i then
+      local text = "    " .. symbol .. "->" .. slot .. " " .. bp.commentMap[symbol]
+        .. " x" .. counts[symbol]
+
+      if counts[symbol] > 64 then
+        text = text .. " ("
+          .. math.floor(counts[symbol] / 64) .. "x64 + "
+          .. counts[symbol] % 64
+        .. ")"
+      end
+
+      print(text)
+      break
+    end
+  end
+  i = i + 1
 end
 
 -- wait for user confirmation
@@ -235,7 +252,7 @@ print("Press any key to continue...")
 os.pullEvent("key")
 
 -- now, let's build
-build(blueprint)
+build(bp)
 
 -- Let's turn autorefill to its
 -- previous setting.

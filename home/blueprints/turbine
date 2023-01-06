@@ -1,10 +1,10 @@
 7 7 17
-H 1 Casing x157 (2x64 + 29)
-I 2 Glass x300 (4x64 + 44)
-+ 3 Rotor Shaft x15
-@ 4 Enderium Block x36
-= 5 Rotor Blade x80 (64 + 16)
-X 6 Rotor Bearing x1
+H Casing
+I Glass
++ Rotor Shaft
+@ Enderium Block
+= Rotor Blade
+X Rotor Bearing
 Blueprint:
 HHHHHHH
 HHHHHHH
