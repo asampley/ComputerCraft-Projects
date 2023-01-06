@@ -68,10 +68,9 @@ local function readBlueprint(fileName)
   local dimStrings = {}
   dimensions:gsub("%d+", function(i) table.insert(dimStrings, i) end)
 
-  local width = tonumber(dimStrings[1])
-  local depth = tonumber(dimStrings[2])
-  local height = tonumber(dimStrings[3])
-  bp:add_volume(blueprint.volume.cuboid_filled(0, width - 1, 0, height - 1, 0, depth - 1))
+  bp.width = tonumber(dimStrings[1])
+  bp.depth = tonumber(dimStrings[2])
+  bp.height = tonumber(dimStrings[3])
 
   local invSlot = 1
   -- read all symbol and slot pairs
@@ -98,22 +97,24 @@ local function readBlueprint(fileName)
   -- read blueprint
   local blueprintLine = nil
 
-  for y = 0, height - 1 do
-    for z = 0, depth - 1 do
+  for y = 0, bp.height - 1 do
+    for z = 0, bp.depth - 1 do
       blueprintLine = file.readLine()
       lineNumber = lineNumber + 1
       if not blueprintLine
       then
         error("at line " .. lineNumber .. ": number of lines in block does not match depth")
-      elseif blueprintLine:len() ~= width
+      elseif blueprintLine:len() ~= bp.width
       then
         error("at line " .. lineNumber .. ":" ..
           "\nline is not the same as <width>" ..
-          "\nExpected: " .. width ..
+          "\nExpected: " .. bp.width ..
           "\nGot: " .. blueprintLine:len())
       end
-      for x = 0, width - 1 do
-        bp:set_block(x, y, z, blueprintLine:sub(x + 1, x + 1))
+      for x = 0, bp.width - 1 do
+        local symbol = blueprintLine:sub(x + 1, x + 1)
+
+        bp:set_block(x, y, z, symbol)
       end
 
     end
@@ -147,26 +148,18 @@ local function build(bp)
   local invertZ = false
   local xi, yi, zi = 0, 0, 0
 
-  assert(#bp.volumes == 1, "Multiple volumes unsupported")
-
-  local volume = bp.volumes[1]
-  assert(
-    volume.x0 == 0 and volume.y0 == 0 and volume.z0 == 0,
-    "Blueprint does not start at 0, 0, 0"
-  )
-
-  for y = 0, volume.y1 do
+  for y = 0, bp.height - 1 do
     local yi = y
-    for x = 0, volume.x1 do
+    for x = 0, bp.width - 1 do
       if invertX then
-        xi = volume.x1 - x
+        xi = bp.width - 1 - x
       else
         xi = x
       end
 
-      for z = 0, volume.z1 do
+      for z = 0, bp.depth - 1 do
         if invertZ then
-          zi = volume.z1 - z
+          zi = bp.depth - 1 - z
         else
           zi = z
         end
@@ -181,7 +174,7 @@ local function build(bp)
         -- select correct inventory slot
         local block = bp:get_block(xi, yi, zi)
 
-        if block ~= blueprint.AIR then
+        if block ~= nil then
           local slot = bp.symbols[block].slot
           turtle.select(slot)
 
@@ -221,9 +214,9 @@ if not bp then
 end
 
 print("Loaded blueprint:")
-print("  width=  " .. bp.volumes[1].x1 + 1)
-print("  depth=  " .. bp.volumes[1].y1 + 1)
-print("  height= " .. bp.volumes[1].z1 + 1)
+print("  width=  " .. bp.width + 1)
+print("  depth=  " .. bp.depth + 1)
+print("  height= " .. bp.height + 1)
 print("  inventory:")
 local counts = bp:counts()
 local i = 1
