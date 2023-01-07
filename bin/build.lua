@@ -174,9 +174,7 @@ local function build(bp)
         -- select correct inventory slot
         local block = bp.blocks:get(xi, yi, zi)
 
-        print(xi, yi, zi, block)
-
-        if block ~= nil then
+        if block ~= nil and block ~= blueprint.AIR then
           local slot = bp.symbols[block].slot
           turtle.select(slot)
 
