@@ -1,5 +1,6 @@
 local location = require("/lib/location")
 local bore = require("/lib/bore")
+local wants = require("/lib/bore/wants")
 
 local args = require("/lib/args").parse(
   {
@@ -10,6 +11,9 @@ local args = require("/lib/args").parse(
       { name = "minZ", type = "number" },
       { name = "maxZ", type = "number" },
     },
+    flags = {
+      wants = "string",
+    }
   },
   {...}
 )
@@ -27,5 +31,6 @@ for _, i in ipairs({ "x", "y", "z" }) do
   min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
 end
 
+wants.setProfile(args.wants)
 bore.setChest(position)
 bore.go(location.getPos(), args.depth, min, max)
