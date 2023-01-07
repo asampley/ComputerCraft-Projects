@@ -114,7 +114,7 @@ local function readBlueprint(fileName)
       for x = 0, bp.width - 1 do
         local symbol = blueprintLine:sub(x + 1, x + 1)
 
-        bp:set_block(x, y, z, symbol)
+        bp.blocks:set(symbol, x, y, z)
       end
 
     end
@@ -172,7 +172,9 @@ local function build(bp)
         turtle.digDown()
 
         -- select correct inventory slot
-        local block = bp:get_block(xi, yi, zi)
+        local block = bp.blocks:get(xi, yi, zi)
+
+        print(xi, yi, zi, block)
 
         if block ~= nil then
           local slot = bp.symbols[block].slot

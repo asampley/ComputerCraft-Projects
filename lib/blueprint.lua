@@ -1,3 +1,5 @@
+local tensor = require("/lib/tensor")
+
 local blueprint = {
   AIR = "."
 }
@@ -6,45 +8,11 @@ local blueprint = {
 function blueprint.new()
   return setmetatable(
     {
-      blocks = {},
+      blocks = tensor.new(),
     },
     { __index = blueprint }
   )
 end
-
--- get the block, nil if air or out of bounds
-function blueprint:get_block(x, y, z)
-  return self.blocks[x] and self.blocks[x][y] and self.blocks[x][y][z]
-end
-
--- set the block only if it is in bounds
--- return boolean indicating whether it was in bounds
-function blueprint:set_block(x, y, z, value)
-  if not self.blocks[x] then
-    if value == nil then
-      return
-    else
-      self.blocks[x] = {}
-    end
-  end
-  if not self.blocks[x][y] then
-    if value == nil then
-      return
-    else
-      self.blocks[x][y] = {}
-    end
-  end
-
-  self.blocks[x][y][z] = value
-
-  if next(self.blocks[x][y]) == nil then
-    self.blocks[x][y] = nil
-  end
-  if next(self.blocks[x]) == nil then
-    self.blocks[x] = nil
-  end
-end
-
 
 function blueprint:cuboid_filled(x0, x1, y0, y1, z0, z1, value)
   for x = x0, x1 do
