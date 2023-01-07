@@ -49,7 +49,7 @@ local startHeading = location.getHeading()
 local slot = 1
 turtle.select(slot)
 
-path.rectangleSimple(toPos, function (direction)
+path.rectangleSimple(dimensionVector, function (direction)
   while turtle.getItemCount() == 0 and slot < 16 do
     slot = slot + 1
     turtle.select(slot)
