@@ -54,7 +54,8 @@ local stack = {}
 local stackI = -1
 local todo = {}
 
-m.transferToChest = function()
+-- ignoreSlots - eg. {[1] = true, [3] = true} to skip slots 1 and 3
+m.transferToChest = function(ignoreSlots)
   move.digTo(chestPos)
 
   if not peripheral.hasType("top", "inventory") then
@@ -64,7 +65,7 @@ m.transferToChest = function()
   local bucketSlot = bucket.find()
 
   for i = 1, 16 do
-    if i ~= bucketSlot then
+    if i ~= bucketSlot and not ignoreSlots[i] then
       -- don't transfer fuel unless we are full
       local item = turtle.getItemDetail(i)
       if item and (not fuel[item.name] or not m.shouldFuel()) then
