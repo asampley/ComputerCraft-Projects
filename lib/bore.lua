@@ -58,8 +58,11 @@ local todo = {}
 m.transferToChest = function(ignoreSlots)
   move.digTo(chestPos)
 
-  if not peripheral.hasType("top", "inventory") then
-    error("Block above chestPos is not an inventory")
+  local direction
+  if peripheral.hasType("top","inventory") then direction = "Up" end
+  if peripheral.hasType("bottom","inventory") then direction = "Down" end
+  if not direction then
+    error("No inventory above or below turtle")
   end
 
   local bucketSlot = bucket.find()
@@ -70,7 +73,7 @@ m.transferToChest = function(ignoreSlots)
       local item = turtle.getItemDetail(i)
       if item and (not fuel[item.name] or not m.shouldFuel()) then
         turtle.select(i)
-        turtle.dropUp()
+        turtle["drop"..direction]()
       end
     end
   end
