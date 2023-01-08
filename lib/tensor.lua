@@ -52,7 +52,7 @@ function tensor:set(value, ...)
   if value == nil then
     for i = #sets, 1, -1 do
       local a = args[i]
-      print(textutils.serialize(sets[i][a]))
+
       if next(sets[i][a]) == nil then
         sets[i][a] = nil
       else
