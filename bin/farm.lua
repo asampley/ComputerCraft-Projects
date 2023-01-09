@@ -3,7 +3,7 @@
 
 local arguments = require("/lib/args")
 local bore = require("/lib/bore")
-local _inventory = require("/lib/inventory")
+local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
 local path = require("/lib/path")
@@ -34,11 +34,13 @@ local startPos = location.getPos()
 local startHeading = location.getHeading()
 
 bore.setChest(startPos)
-_inventory.setAutoRefill(true)
-local slot = 1 -- slot 1 should stay full
-turtle.select(slot)
+bore.setReservedSlots({[1] = true})
+inventory.setAutoRefill(true)
+local plantingSlot = 1 -- slot 1 should stay full
+turtle.select(plantingSlot)
 
 path.rectangleSimple(dimensionVector, function (direction)
+  if turtle.getSelectedSlot() ~= plantingSlot then turtle.select(plantingSlot) end
   if turtle.getItemCount() == 0 then error("Ran out of items to place") end
   bore.fuelAndInventoryCheck(startPos, startHeading)
   local found, block = turtle.inspectDown()
@@ -50,4 +52,4 @@ end)
 
 move.goTo(startPos)
 move.turnTo(startHeading)
-bore.transferToChest({[1] = true})
+bore.transferToChest()

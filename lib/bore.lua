@@ -14,9 +14,16 @@ local fuel = config.load("bore/fuel")
 
 -- record chest location
 local chestPos
+-- save slots that should be handled externally
+local reservedSlots = {}
 
 m.setChest = function(position)
   chestPos = position
+end
+
+-- slots - eg. {[1] = true, [3] = true} to skip slots 1 and 3
+m.setReservedSlots = function (slots)
+  reservedSlots = slots or {}
 end
 
 -- check if block is wanted
@@ -54,8 +61,7 @@ local stack = {}
 local stackI = -1
 local todo = {}
 
--- ignoreSlots - eg. {[1] = true, [3] = true} to skip slots 1 and 3
-m.transferToChest = function(ignoreSlots)
+m.transferToChest = function()
   move.digTo(chestPos)
 
   local direction
@@ -68,7 +74,7 @@ m.transferToChest = function(ignoreSlots)
   local bucketSlot = bucket.find()
 
   for i = 1, 16 do
-    if i ~= bucketSlot and not ignoreSlots[i] then
+    if i ~= bucketSlot and not reservedSlots[i] then
       -- don't transfer fuel unless we are full
       local item = turtle.getItemDetail(i)
       if item and (not fuel[item.name] or not m.shouldFuel()) then
@@ -393,6 +399,7 @@ m.cleanInventory = function ()
   for slot = 1, 16, 1 do
     if turtle.getItemCount(slot) > 0
       and slot ~= bucketSlot
+      and not reservedSlots[slot]
       and not wants.wants(turtle.getItemDetail(slot, true)) then
         turtle.select(slot)
         turtle.drop()
