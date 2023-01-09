@@ -40,6 +40,7 @@ turtle.select(slot)
 
 path.rectangleSimple(dimensionVector, function (direction)
   if turtle.getItemCount() == 0 then error("Ran out of items to place") end
+  bore.fuelAndInventoryCheck(startPos, startHeading)
   local found, block = turtle.inspectDown()
   if not found or blocks.isSimpleCrop(block) and blocks.isHarvestable(block) then
     turtle.digDown() -- till or harvest
