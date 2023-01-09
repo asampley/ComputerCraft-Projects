@@ -55,8 +55,9 @@ m.isSimpleCrop = function (block)
 end
 
 m.isHarvestable = function (block)
+  if not block.state then return false end
   if block.name == "minecraft:beetroots" and block.state.age == 3 then return true end
-  if m.isSimpleCrop(block.name) and block.state.age == 7 then return true end
+  if m.isSimpleCrop(block) and block.state.age == 7 then return true end
   return false
 end
 
