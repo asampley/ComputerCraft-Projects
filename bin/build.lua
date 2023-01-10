@@ -173,8 +173,6 @@ local function build(bp)
     end
   end
 
-  print(textutils.serialize(distance))
-
   local start = location.getPos()
   local forward = location.getHeading()
   --local right = location.turnRight(forward)
