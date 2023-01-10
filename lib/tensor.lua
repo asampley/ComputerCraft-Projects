@@ -24,21 +24,15 @@ function tensor:set(value, ...)
   local args = { ... }
   local last = table.remove(args)
   local set = self
-  local sets = {}
 
   -- keep appending indices excluding the last one
-  for i, a in ipairs(args)  do
+  for _, a in ipairs(args) do
     if set[a] == nil then
       if value == nil then
         return
       else
         set[a] = {}
       end
-    end
-
-    -- tracking for cleaning up tables
-    if value == nil then
-      sets[i] = set
     end
 
     set = set[a]
@@ -50,14 +44,27 @@ function tensor:set(value, ...)
   -- if the value was nil, clean up whatever tables
   -- are now empty
   if value == nil then
-    for i = #sets, 1, -1 do
-      local a = args[i]
+    set = self
+    local remove
 
-      if next(sets[i][a]) == nil then
-        sets[i][a] = nil
-      else
-        break
+    for i = 1, #args do
+      local last_set = set
+
+      set = set[args[i]]
+
+      -- can prune if next_set only contains the one key, which is the next argument
+      --
+      -- as soon as next_set does not contain only that one key, it and others above
+      -- cannot be pruned
+      if next(set) ~= args[i + 1] or next(set, args[i + 1]) ~= nil then
+        remove = nil
+      elseif not remove then
+        remove = { last_set, args[i] }
       end
+    end
+
+    if remove then
+      remove[1][remove[2]] = nil
     end
   end
 end

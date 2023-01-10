@@ -64,4 +64,54 @@ m.binaryHeap = {
   end,
 }
 
+m.deque = {
+  new = function()
+    return setmetatable({ front = 0, back = -1 }, {__index = m.deque})
+  end,
+
+  empty = function(self)
+    return self.front > self.back
+  end,
+
+  push_front = function(self, value)
+    self.front = self.front - 1
+    self[self.front] = value
+  end,
+
+  push_back = function(self, value)
+    self.back = self.back + 1
+    self[self.back] = value
+  end,
+
+  pop_front = function(self)
+    if self:empty() then return nil end
+
+    local value = self[self.front]
+
+    self[self.front] = nil
+    self.front = self.front + 1
+
+    return value
+  end,
+
+  pop_back = function(self)
+    if self:empty() then return nil end
+
+    local value = self[self.back]
+
+    self[self.back] = nil
+    self.back = self.back - 1
+
+    return value
+  end,
+
+  peek_front = function(self)
+    return self[self.front]
+  end,
+
+  peek_back = function(self)
+    return self[self.front]
+  end
+}
+
 return m
