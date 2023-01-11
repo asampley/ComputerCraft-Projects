@@ -8,8 +8,6 @@ local function _to(position, upFunc, downFunc, forwardFunc, backFunc, digUpFunc,
   local currPosition = location.getPos()
   local path = position - currPosition
 
-  print(position, currPosition, path)
-
   -- move in each axis, xyz
   for i = 1, 3 do
     local move = moveOrder:sub(i, i):lower()

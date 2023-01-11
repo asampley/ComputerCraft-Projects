@@ -49,6 +49,6 @@ m.wants = function(block)
 end
 
 -- Try to set a default profile
-wants.setProfile()
+m.setProfile()
 
 return m
