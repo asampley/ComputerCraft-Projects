@@ -43,4 +43,22 @@ m.isBedrock = function (block)
   return block.name == "minecraft:bedrock"
 end
 
+-- wheat, carrots, potatoes, beets
+m.isSimpleCrop = function (block)
+  local simpleCrops = {
+    ["minecraft:wheat"] = true,
+    ["minecraft:carrots"] = true,
+    ["minecraft:potatoes"] = true,
+    ["minecraft:beetroots"] = true,
+  }
+  return simpleCrops[block.name] or false
+end
+
+m.isHarvestable = function (block)
+  if not block.state then return false end
+  if block.name == "minecraft:beetroots" and block.state.age == 3 then return true end
+  if m.isSimpleCrop(block) and block.state.age == 7 then return true end
+  return false
+end
+
 return m
