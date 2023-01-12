@@ -14,6 +14,7 @@ if not _G.location then
   _turtle.forward = turtle.forward
   _turtle.up = turtle.up
   _turtle.down = turtle.down
+  _turtle.back = turtle.back
   _turtle.turnLeft = turtle.turnLeft
   _turtle.turnRight = turtle.turnRight
 
@@ -41,6 +42,14 @@ if not _G.location then
     local success = _turtle.down()
     if success then
       _G.location.position = _G.location.position - m.Y()
+    end
+    return success
+  end
+
+  local function back()
+    local success = _turtle.back()
+    if success then
+      _G.location.position = _G.location.position - _G.location.heading
     end
     return success
   end
@@ -73,6 +82,7 @@ if not _G.location then
   _G.turtle.forward = forward
   _G.turtle.up = up
   _G.turtle.down = down
+  _G.turtle.back = back
   _G.turtle.turnLeft = turnLeft
   _G.turtle.turnRight = turnRight
 end

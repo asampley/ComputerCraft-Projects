@@ -2,6 +2,8 @@ local inventory = require("/lib/inventory")
 local location = require("/lib/location")
 local move = require("/lib/move")
 local blueprint = require("/lib/blueprint")
+local collect = require("/lib/collect")
+local tensor = require("/lib/tensor")
 
 --[[
 
@@ -51,8 +53,7 @@ and the next layer is the top.
 --]]
 
 --[[
-Read a blueprint, return
-width, depth, height, design, invMap, commentMap}
+Read and return a blueprint
 --]]
 local function readBlueprint(fileName)
   local bp = blueprint.new()
@@ -72,13 +73,11 @@ local function readBlueprint(fileName)
   local width = tonumber(dimStrings[1])
   local depth = tonumber(dimStrings[2])
   local height = tonumber(dimStrings[3])
-  bp:add_volume(0, width - 1, 0, height - 1, 0, depth - 1)
 
   local invSlot = 1
   -- read all symbol and slot pairs
   local symbolLine = nil
-  bp.invMap = {}
-  bp.commentMap = {}
+  bp.symbols = {}
   while true do
     symbolLine = file.readLine()
     lineNumber = lineNumber + 1
@@ -89,8 +88,10 @@ local function readBlueprint(fileName)
 
     local symbol, comment = symbolLine:match("(.) (.*)")
 
-    bp.invMap[symbol] = invSlot
-    bp.commentMap[symbol] = comment
+    bp.symbols[symbol] = {
+      slot = invSlot,
+      comment = comment,
+    }
 
     invSlot = invSlot + 1
   end
@@ -113,7 +114,9 @@ local function readBlueprint(fileName)
           "\nGot: " .. blueprintLine:len())
       end
       for x = 0, width - 1 do
-        bp:set_block(x, y, z, blueprintLine:sub(x + 1, x + 1))
+        local symbol = blueprintLine:sub(x + 1, x + 1)
+
+        bp.blocks:set(symbol, x, y, z)
       end
 
     end
@@ -123,6 +126,17 @@ local function readBlueprint(fileName)
   end
 
   return bp
+end
+
+local function adjacent(x, y, z)
+  return {
+    { x, y - 1, z },
+    { x, y + 1, z },
+    { x - 1, y, z },
+    { x + 1, y, z },
+    { x, y, z - 1},
+    { x, y, z + 1},
+  }
 end
 
 --[[
@@ -135,69 +149,121 @@ complete the structure
 
 --]]
 local function build(bp)
+  -- create distance map
+  local distance = tensor.new()
+  distance:set(0, 0, 0, 0)
+
+  local expand = collect.deque.new()
+  expand:push_back({0, 0, 0})
+
+  local function set_dist(dist, x, y, z)
+    if bp.blocks:get(x, y, z) and not distance:get(x, y, z) then
+      distance:set(dist, x, y, z)
+      expand:push_back({ x, y, z })
+    end
+  end
+
+  while not expand:empty() do
+    local x, y, z = table.unpack(expand:pop_front())
+
+    local d = distance:get(x, y, z) + 1
+
+    for _, v in ipairs(adjacent(x, y, z)) do
+      set_dist(d, table.unpack(v))
+    end
+  end
+
   local start = location.getPos()
   local forward = location.getHeading()
-  turtle.turnRight()
-  local right = location.getHeading()
-  local up = vector.new(0, 1, 0)
+  --local right = location.turnRight(forward)
+  local up = location.Y()
 
-  --print("init done")
+  repeat
+    local pos = location.getPos() - start
 
-  local invertX = false
-  local invertZ = false
-  local xi, yi, zi = 0, 0, 0
+    local function local_max(vec)
+      local dist = distance:get(vec.x, vec.y, vec.z)
 
-  assert(#bp.volumes == 1, "Multiple volumes unsupported")
-
-  local volume = bp.volumes[1]
-  assert(
-    volume.x0 == 0 and volume.y0 == 0 and volume.z0 == 0,
-    "Blueprint does not start at 0, 0, 0"
-  )
-
-  for y = 0, volume.y1 do
-    local yi = y
-    for x = 0, volume.x1 do
-      if invertX then
-        xi = volume.x1 - x
-      else
-        xi = x
+      for _, a in ipairs(adjacent(vec.x, vec.y, vec.z)) do
+        local adj_dist = distance:get(table.unpack(a))
+        if adj_dist and dist < adj_dist then
+          return false
+        end
       end
 
-      for z = 0, volume.z1 do
-        if invertZ then
-          zi = volume.z1 - z
+      return true
+    end
+
+    local above = pos + up
+    if distance:get(above.x, above.y, above.z) then
+      if local_max(above) then
+        local block = bp.blocks:get(above.x, above.y, above.z)
+
+        if block == blueprint.AIR then
+          turtle.digUp()
         else
-          zi = z
+          turtle.select(bp.symbols[block].slot)
+
+          while not turtle.placeUp() do turtle.digUp() end
         end
 
-        -- move to location above block
-        local buildPos = start + (forward * zi) + (right * xi) + (up * (yi + 1))
-        move.digTo(buildPos)
+        distance:set(nil, above.x, above.y, above.z)
+      end
+    end
 
-        -- remove block underneath
-        turtle.digDown()
+    local below = pos - up
+    if distance:get(below.x, below.y, below.z) then
+      if local_max(below) then
+        local block = bp.blocks:get(below.x, below.y, below.z)
 
-        -- select correct inventory slot
-        local block = bp:get_block(xi, yi, zi)
+        if block == blueprint.AIR then
+          turtle.digUp()
+        else
+          turtle.select(bp.symbols[block].slot)
 
-        if block ~= blueprint.AIR then
-          local slot = bp.invMap[block]
-          turtle.select(slot)
-
-          -- place a block down
-          while not turtle.placeDown() do turtle.digDown() end
+          while not turtle.placeUp() do turtle.digUp() end
         end
-      end -- end z
-      -- we are on the other side, so
-      -- switch directions
-      invertZ = not invertZ
 
-    end -- end x
-    -- we are on the other side, so
-    -- switch directions
-    invertX = not invertX
-  end -- end y
+        distance:set(nil, below.x, below.y, below.z)
+      end
+    end
+
+    local heading = location.getHeading()
+
+    for _ = 1, 4 do
+      local beside = pos + heading
+      if distance:get(beside.x, beside.y, beside.z) then
+        if local_max(beside) then
+          local block = bp.blocks:get(beside.x, beside.y, beside.z)
+
+          move.turnTo(heading)
+          if block == blueprint.AIR then
+            turtle.dig()
+          else
+            turtle.select(bp.symbols[block].slot)
+
+            while not turtle.place() do turtle.dig() end
+          end
+
+          distance:set(nil, beside.x, beside.y, beside.z)
+        end
+      end
+
+      heading = location.turnRight(heading)
+    end
+
+    local best
+    for _, a in ipairs(adjacent(pos.x, pos.y, pos.z)) do
+      local d = distance:get(table.unpack(a))
+      if d and (not best or best.dist < d) then
+        best = { dist = d, coords = a }
+      end
+    end
+
+    if best then
+      move.digTo(start + vector.new(table.unpack(best.coords)))
+    end
+  until not best
 end
 
 -- First, let's turn autofill on
@@ -214,23 +280,25 @@ then
 end
 
 local fileName = args[1]
-local bp = readBlueprint(fileName)
+local bp = loadfile(fileName, "bt", _ENV)
+if bp then
+  bp = bp()
+else
+  bp = readBlueprint(fileName)
+end
 
 if not bp then
   error("Unable to read blueprint "..fileName)
 end
 
 print("Loaded blueprint:")
-print("  width=  " .. bp.volumes[1].x1 + 1)
-print("  depth=  " .. bp.volumes[1].y1 + 1)
-print("  height= " .. bp.volumes[1].z1 + 1)
 print("  inventory:")
 local counts = bp:counts()
 local i = 1
 while i <= 16 do
-  for symbol, slot in pairs(bp.invMap) do
-    if slot == i then
-      local text = "    " .. symbol .. "->" .. slot .. " " .. bp.commentMap[symbol]
+  for symbol, info in pairs(bp.symbols) do
+    if info.slot == i then
+      local text = "    " .. symbol .. "->" .. info.slot .. " " .. info.comment
         .. " x" .. counts[symbol]
 
       if counts[symbol] > 64 then
