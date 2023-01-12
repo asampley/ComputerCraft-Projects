@@ -1,22 +1,30 @@
 local bore = require("/lib/bore")
 local location = require("/lib/location")
 local move = require("/lib/move")
+local wants = require("/lib/bore/wants")
 
-local args = {...}
+local args = require("/lib/args").parse({
+  flags = {
+    wants = "string",
+    help = "boolean",
+  },
+  required = {
+    { name = "depth", type = "number" },
+    { name = "forward", type = "number" },
+    { name = "right", type = "number" },
+  },
+},
+{...})
 
-if #args ~= 3 then
-  print("Usage: <depth> <forward> <right>")
+if args.help then
   print("Ex: 20 5 4 (depth 20, and stay within a 5 x 4 area forward and right)")
   return
 end
 
 -- load arguments
-local depth = tonumber(args[1])
-  or error("depth must be an integer")
-local forward = tonumber(args[2])
-  or error("Forward must be an integer")
-local right = tonumber(args[3])
-  or error("Right must be an integer")
+local depth = args.depth
+local forward = args.forward
+local right = args.right
 
 -- record chest location
 local position = location.getPos()
@@ -32,6 +40,7 @@ for _, i in ipairs({ "x", "y", "z" }) do
   min[i], max[i] = math.min(min[i], max[i]), math.max(min[i], max[i])
 end
 
+wants.setProfile(args.wants)
 bore.setChest(position)
 
 --[[ Tile holes like this:
