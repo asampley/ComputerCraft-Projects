@@ -1,5 +1,5 @@
 # ComputerCraft-Projects
-[ComputerCraft](https://tweaked.cc/) is a Minecraft mod that uses Lua for scripting computers and robots ([turtles](https://tweaked.cc/module/turtle.html). This repository contains some work that I've done.
+[ComputerCraft](https://tweaked.cc/) is a Minecraft mod that uses Lua for scripting computers and robots ([turtles](https://tweaked.cc/module/turtle.html)). This repository contains some work that I've done.
 
 ## Quick start
 Start a computer and run `wget run https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/bootstrap.lua https://raw.githubusercontent.com/asampley/ComputerCraft-Projects/master/`. This will run a bootstrap program that will download a library and executable for fetching programs and their dependencies called `werun`.
