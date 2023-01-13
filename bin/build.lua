@@ -128,15 +128,8 @@ local function readBlueprint(fileName)
   return bp
 end
 
-local function adjacent(x, y, z)
-  return {
-    { x, y - 1, z },
-    { x, y + 1, z },
-    { x - 1, y, z },
-    { x + 1, y, z },
-    { x, y, z - 1},
-    { x, y, z + 1},
-  }
+local function directions()
+  return { "-Y", "Y", "-X", "X", "-Z", "Z" }
 end
 
 --[[
@@ -154,22 +147,35 @@ local function build(bp)
   distance:set(0, 0, 0, 0)
 
   local expand = collect.deque.new()
-  expand:push_back({0, 0, 0})
+  expand:push_back(vector.new(0, 0, 0))
 
-  local function set_dist(dist, x, y, z)
-    if bp.blocks:get(x, y, z) and not distance:get(x, y, z) then
-      distance:set(dist, x, y, z)
-      expand:push_back({ x, y, z })
+  while not expand:empty() do
+    local v = expand:pop_front()
+
+    local d = distance:get(v.x, v.y, v.z) + 1
+
+    for _, direction in ipairs(directions()) do
+      local adj = v + location[direction]()
+
+      local symbol, symbol_info = bp:symbol(adj.x, adj.y, adj.z)
+
+      if symbol
+        and not (symbol_info and symbol_info.nobuild and symbol_info.nobuild[direction])
+        and not distance:get(adj.x, adj.y, adj.z)
+      then
+        distance:set(d, adj.x, adj.y, adj.z)
+        expand:push_back(adj)
+      end
     end
   end
 
-  while not expand:empty() do
-    local x, y, z = table.unpack(expand:pop_front())
-
-    local d = distance:get(x, y, z) + 1
-
-    for _, v in ipairs(adjacent(x, y, z)) do
-      set_dist(d, table.unpack(v))
+  for x, xx in pairs(bp.blocks) do
+    for y, yy in pairs(xx) do
+      for z, _ in pairs(yy) do
+        if not distance:get(x, y, z) then
+          error("Unable to create a path to all the blocks")
+        end
+      end
     end
   end
 
@@ -184,8 +190,10 @@ local function build(bp)
     local function local_max(vec)
       local dist = distance:get(vec.x, vec.y, vec.z)
 
-      for _, a in ipairs(adjacent(vec.x, vec.y, vec.z)) do
-        local adj_dist = distance:get(table.unpack(a))
+      for _, d in ipairs(directions()) do
+        local a = vec + location[d]()
+
+        local adj_dist = distance:get(a.x, a.y, a.z)
         if adj_dist and dist < adj_dist then
           return false
         end
@@ -197,34 +205,38 @@ local function build(bp)
     local above = pos + up
     if distance:get(above.x, above.y, above.z) then
       if local_max(above) then
-        local block = bp.blocks:get(above.x, above.y, above.z)
+        local symbol, info = bp:symbol(above.x, above.y, above.z)
 
-        if block == blueprint.AIR then
+        if symbol == blueprint.AIR then
           turtle.digUp()
-        else
-          turtle.select(bp.symbols[block].slot)
+
+          distance:set(nil, above.x, above.y, above.z)
+        elseif not info or not info.nobuild or not info.nobuild["Y"] then
+          turtle.select(info.slot)
 
           while not turtle.placeUp() do turtle.digUp() end
-        end
 
-        distance:set(nil, above.x, above.y, above.z)
+          distance:set(nil, above.x, above.y, above.z)
+        end
       end
     end
 
     local below = pos - up
     if distance:get(below.x, below.y, below.z) then
       if local_max(below) then
-        local block = bp.blocks:get(below.x, below.y, below.z)
+        local symbol, info = bp:symbol(below.x, below.y, below.z)
 
-        if block == blueprint.AIR then
+        if symbol == blueprint.AIR then
           turtle.digUp()
-        else
-          turtle.select(bp.symbols[block].slot)
+
+          distance:set(nil, beside.x, beside.y, beside.z)
+        elseif not info or not info.nobuild or not info.nobuild["-Y"] then
+          turtle.select(info.slot)
 
           while not turtle.placeUp() do turtle.digUp() end
-        end
 
-        distance:set(nil, below.x, below.y, below.z)
+          distance:set(nil, beside.x, beside.y, beside.z)
+        end
       end
     end
 
@@ -234,18 +246,30 @@ local function build(bp)
       local beside = pos + heading
       if distance:get(beside.x, beside.y, beside.z) then
         if local_max(beside) then
-          local block = bp.blocks:get(beside.x, beside.y, beside.z)
+          local symbol, info = bp:symbol(beside.x, beside.y, beside.z)
 
-          move.turnTo(heading)
-          if block == blueprint.AIR then
+          if symbol == blueprint.AIR then
+            move.turnTo(heading)
+
             turtle.dig()
-          else
-            turtle.select(bp.symbols[block].slot)
+
+            distance:set(nil, beside.x, beside.y, beside.z)
+          elseif not info or not info.nobuild
+            or (heading.x == 1 and not info.nobuild["X"])
+            or (heading.x == -1 and not info.nobuild["-X"])
+            or (heading.z == 1 and not info.nobuild["Z"])
+            or (heading.z == -1 and not info.nobuild["-Z"])
+          then
+            move.turnTo(heading)
+
+            turtle.select(info.slot)
 
             while not turtle.place() do turtle.dig() end
+
+            distance:set(nil, beside.x, beside.y, beside.z)
           end
 
-          distance:set(nil, beside.x, beside.y, beside.z)
+          print(symbol, textutils.serialize(info, { compact = true }))
         end
       end
 
@@ -253,15 +277,24 @@ local function build(bp)
     end
 
     local best
-    for _, a in ipairs(adjacent(pos.x, pos.y, pos.z)) do
-      local d = distance:get(table.unpack(a))
-      if d and (not best or best.dist < d) then
+    for _, direction in ipairs(directions()) do
+      local a = pos + location[direction]()
+
+      local _, info = bp:symbol(pos.x, pos.y, pos.z)
+
+      local d = distance:get(a.x, a.y, a.z)
+      if d and (
+        not best or best.dist < d
+        -- ties must be broken by going a direction that can build on the current location
+        -- otherwise a loop can be reached
+        or (best.dist == d and info and info.nobuild and not info.nobuild[direction])
+      ) then
         best = { dist = d, coords = a }
       end
     end
 
     if best then
-      move.digTo(start + vector.new(table.unpack(best.coords)))
+      move.digTo(start + best.coords)
     end
   until not best
 end
@@ -316,8 +349,8 @@ while i <= 16 do
 end
 
 -- wait for user confirmation
-print("Press any key to continue...")
-os.pullEvent("key")
+print("Press enter to continue...")
+repeat until table.pack(os.pullEvent("key"))[2] == keys.enter
 
 -- now, let's build
 build(bp)

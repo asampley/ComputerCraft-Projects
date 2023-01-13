@@ -91,6 +91,9 @@ end
 m.X = function() return vector.new(1, 0, 0) end
 m.Y = function() return vector.new(0, 1, 0) end
 m.Z = function() return vector.new(0, 0, 1) end
+m["-X"] = function() return vector.new(-1, 0, 0) end
+m["-Y"] = function() return vector.new(0, -1, 0) end
+m["-Z"] = function() return vector.new(0, 0, -1) end
 
 -- helper functions to rotate headings
 m.turnLeft = function(heading)

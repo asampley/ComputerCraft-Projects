@@ -3,14 +3,31 @@ local blueprint = require("/lib/blueprint")
 local bp = blueprint.new()
 
 bp.symbols = {
-  ["A"] = {
+  ["|"] = {
     slot = 1,
-    comment = "Frame",
-  }
+    comment = "Frame vertical",
+    nobuild = bp.ONLY_BUILD_Y,
+  },
+  ["-"] = {
+    slot = 1,
+    comment = "Frame along x",
+    nobuild = bp.ONLY_BUILD_X,
+  },
+  ["_"] = {
+    slot = 1,
+    comment = "Frame along z",
+    nobuild = bp.ONLY_BUILD_Z,
+  },
+  ["^"] = {
+    slot = 2,
+    comment = "Corner",
+  },
 }
 
-bp:cuboid(0, 5, 0, 5, 0, 5, "A")
-bp:cuboid(1, 4, 5, 8, 1, 4, "A")
-bp:cuboid(2, 3, 8, 10, 2, 3, "A")
+local style = { frame = "|", xyedge = "_", yzedge = "-", corner = "^" }
+
+bp:cuboid(0, 5, 0, 5, 0, 5, style)
+bp:cuboid(1, 4, 5, 8, 1, 4, style)
+bp:cuboid(2, 3, 8, 9, 2, 3, style)
 
 return bp
