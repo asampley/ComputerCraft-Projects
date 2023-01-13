@@ -173,7 +173,7 @@ local function build(bp)
     for y, yy in pairs(xx) do
       for z, _ in pairs(yy) do
         if not distance:get(x, y, z) then
-          error("Unable to create a path to all the blocks")
+          error("Unable to create a path to all blocks: Could not reach " .. x .. "," .. y .. "," .. z)
         end
       end
     end
@@ -229,13 +229,13 @@ local function build(bp)
         if symbol == blueprint.AIR then
           turtle.digUp()
 
-          distance:set(nil, beside.x, beside.y, beside.z)
+          distance:set(nil, below.x, below.y, below.z)
         elseif not info or not info.nobuild or not info.nobuild["-Y"] then
           turtle.select(info.slot)
 
           while not turtle.placeUp() do turtle.digUp() end
 
-          distance:set(nil, beside.x, beside.y, beside.z)
+          distance:set(nil, below.x, below.y, below.z)
         end
       end
     end
