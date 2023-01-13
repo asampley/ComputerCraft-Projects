@@ -233,7 +233,7 @@ local function build(bp)
         elseif not info or not info.nobuild or not info.nobuild["-Y"] then
           turtle.select(info.slot)
 
-          while not turtle.placeUp() do turtle.digUp() end
+          while not turtle.placeDown() do turtle.digDown() end
 
           distance:set(nil, below.x, below.y, below.z)
         end
@@ -268,8 +268,6 @@ local function build(bp)
 
             distance:set(nil, beside.x, beside.y, beside.z)
           end
-
-          print(symbol, textutils.serialize(info, { compact = true }))
         end
       end
 

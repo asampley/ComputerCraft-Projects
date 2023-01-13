@@ -40,16 +40,16 @@ function blueprint:render(x0, x1, y0, y1, z0, z1, render_f, below)
   end
 end
 
--- Return a function for rendering a cuboid
+-- Renders a cuboid
 --
 -- Specify options to change what symbols are where. The most specific
 -- will be taken.
 -- {
 --   corner = "1", -- any of the up to 8 corners of the cuboid
---   edge = "2", -- any block on an edge (excludes the corners)
---   xyedge = "3", -- edge that is on an x and y bound (4 total)
---   xzedge = "3", -- edge that is on an x and z bound (4 total)
---   yzedge = "3", -- edge that is on a y and z bound (4 total)
+--   xyedge = "2", -- edge that is on an x and y bound (4 total)
+--   xzedge = "2", -- edge that is on an x and z bound (4 total)
+--   yzedge = "2", -- edge that is on a y and z bound (4 total)
+--   edge = "3", -- any block on an edge (excludes the corners)
 --   frame = "4", -- combination of corner and edge
 --   xface = "5", -- face on an x boundary (2 total)
 --   yface = "5", -- face on a y boundary (2 total)
@@ -95,6 +95,115 @@ function blueprint:cuboid(x0, x1, y0, y1, z0, z1, symbols)
 
     return block
   end)
+end
+
+-- returns true when the coordinates are inside an ellipsoid centered at 0
+local function ellipsoid(x, y, z, xr, yr, zr)
+  return x * x / xr / xr + y * y / yr / yr + z * z / zr / zr <= 1
+end
+
+-- Renders an ellipsoid at x, y, z with radii xr, yr, and zr
+--
+-- Specify options to change what symbols are where. The most specific
+-- will be taken.
+-- {
+--   xextreme = "1", -- extreme points at the end of the x radius
+--   yextreme = "1", -- extreme points at the end of the y radius
+--   zextreme = "1", -- extreme points at the end of the z radius
+--   extreme = "2", -- any of the up to 8 end points of the radii
+--   xequator = "3", -- ellipse around the ellipsoid where x is about xc (excludes extreme)
+--   yequator = "3", -- ellipse around the ellipsoid where y is about yc (excludes extreme)
+--   zequator = "3", -- ellipse around the ellipsoid along z is about zc (excludes extreme)
+--   equator = "4", -- ellipse around the ellipsoid along the axes (excludes extreme)
+--   frame = "5", -- combination of extremes and equators
+--   face = "6", -- interior area of face (excludes the frame)
+--   hull = "7", -- combination of extreme, equator, and face
+--   xaxis = "8", -- line along x axis (excluding center, extreme, equator)
+--   yaxis = "8", -- line along y axis (excluding center, extreme, equator)
+--   zaxis = "8", -- line along z axis (excluding center, extreme, equator)
+--   axis = "9", -- line along all axes (excluding center, extreme, equator)
+--   center = "10", -- center blocks
+--   fill = "10", -- interior volume of the ellipsoid (excluds the hull)
+--   all = "11", -- all the blocks in the ellipsoid
+-- }
+--
+-- The symbols can optionally be functions that also take in (x, y, z) as
+-- parameters, and then output a symbol. This could be used to obtain
+-- checkerboard effects, for example, or any other effect you can write
+-- into a function.
+function blueprint:ellipsoid(xc, yc, zc, xr, yr, zr, symbols)
+  local extreme = symbols.extreme or symbols.frame or symbols.hull or symbols.all
+  local equator = symbols.equator or symbols.frame or symbols.hull or symbols.all
+  local axis = symbols.axis or symbols.fill or symbols.all
+
+  local blocks = {
+    xextreme = symbols.xextreme or extreme,
+    yextreme = symbols.yextreme or extreme,
+    zextreme = symbols.zextreme or extreme,
+    xequator = symbols.xequator or equator,
+    yequator = symbols.yequator or equator,
+    zequator = symbols.zequator or equator,
+    xaxis = symbols.xaxis or axis,
+    yaxis = symbols.yaxis or axis,
+    zaxis = symbols.zaxis or axis,
+    center = symbols.center or symbols.fill or symbols.all,
+    face = symbols.face or symbols.hull or symbols.all,
+    fill = symbols.fill or symbols.all,
+  }
+
+  local function inside(x, y, z)
+    return ellipsoid(x, y, z, xr, yr, zr)
+  end
+
+  self:render(
+    math.floor(xc - xr), math.floor(xc + xr),
+    math.floor(yc - yr), math.floor(yc + yr),
+    math.floor(zc - zr), math.floor(zc + zr),
+    function(x, y, z)
+      local block
+
+      local dx, dy, dz = x - xc, y - yc, z - zc
+
+      if not ellipsoid(dx, dy, dz, xr, yr, zr) then
+        return nil
+      end
+
+      if x == xc - xr or x == xc + xr then block = blocks.xextreme
+      elseif y == yc - yr or y == yc + yr then block = blocks.yextreme
+      elseif z == zc - zr or z == zc + zr then block = blocks.zextreme
+      else
+        local sx = dx <= 0 and -1 or 1
+        local sy = dy <= 0 and -1 or 1
+        local sz = dz <= 0 and -1 or 1
+
+        if not inside(dx + sx, dy + sy, dz + sz) then
+          if math.abs(dx) < 0.5 then block = blocks.xequator
+          elseif math.abs(dy) < 0.5 then block = blocks.yequator
+          elseif math.abs(dz) < 0.5 then block = blocks.zequator
+          else block = blocks.face
+          end
+        else
+          local zeros = ""
+          if math.abs(dx) < 0.5 then zeros = zeros .. "x" end
+          if math.abs(dy) < 0.5 then zeros = zeros .. "y" end
+          if math.abs(dz) < 0.5 then zeros = zeros .. "z" end
+
+          if zeros == "xyz" then block = blocks.center
+          elseif zeros == "xy" then block = blocks.zaxis
+          elseif zeros == "xz" then block = blocks.yaxis
+          elseif zeros == "yz" then block = blocks.xaxis
+          else block = blocks.fill
+          end
+        end
+      end
+
+      if type(block) == "function" then
+        block = block(x, y, z)
+      end
+
+      return block
+    end
+  )
 end
 
 -- run through the blueprint and count the occurence of each symbol
