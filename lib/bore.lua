@@ -163,13 +163,15 @@ local function expand(minPosition, maxPosition, shaft)
   stackI = stackI + 1
 end
 
-m.go = function(position, depth, minPosition, maxPosition)
+m.go = function(position, distance, minPosition, maxPosition, shaft)
+  local shaft = shaft or -location.Y()
+
   init(position)
 
   move.digTo(position)
 
   -- if we are unable to complete, it should be due to fuel
-  if not m.continue(depth, minPosition, maxPosition) then
+  if not m.continue(distance, minPosition, maxPosition, shaft) then
     print("Unable to go")
   end
 
@@ -177,7 +179,7 @@ m.go = function(position, depth, minPosition, maxPosition)
   m.transferToChest()
 end
 
-m.continue = function(depth, minPosition, maxPosition)
+m.continue = function(distance, minPosition, maxPosition, shaft)
   if not chestPos then
     print("Unable to run without specifying the chest location")
     return false
@@ -264,12 +266,12 @@ m.continue = function(depth, minPosition, maxPosition)
         -- clear todo list to save space
         todo = {}
 
-        if #stack >= depth + 1 then
-          -- break if we reach max depth
+        if #stack >= distance + 1 then
+          -- break if we reach max distance
           break
         else
-          -- continue down
-          bruteDig(bucket.down, turtle.digDown, turtle.inspectDown)
+          -- continue along shaft
+          move.digTo(location.getPos() + shaft)
           expand(minPosition, maxPosition, true)
         end
       else
