@@ -132,6 +132,26 @@ local function directions()
   return { "-Y", "Y", "-X", "X", "-Z", "Z" }
 end
 
+local function opposite(direction)
+  if direction:sub(1,1) == "-" then
+    return direction:sub(2,2)
+  else
+    return "-" .. direction:sub(1,1)
+  end
+end
+
+local function can_build_from(info, direction)
+  if not info then
+    return true
+  elseif info.onto and info.onto ~= opposite(direction) then
+    return false
+  elseif info.nobuild and info.nobuild[direction] then
+    return false
+  else
+    return true
+  end
+end
+
 -- Build the blueprint.
 --
 -- If a path cannot be calcuated to create the blueprint an error is thrown.
@@ -141,31 +161,61 @@ local function build(bp)
   distance:set(0, 0, 0, 0)
 
   local expand = collect.deque.new()
-  expand:push_back(vector.new(0, 0, 0))
+
+  for _, direction in ipairs(directions()) do
+    local adj = location[direction]()
+
+    if bp:symbol(adj.x, adj.y, adj.z) then
+      expand:push_back(adj)
+    end
+  end
 
   while not expand:empty() do
     local v = expand:pop_front()
 
-    local d = distance:get(v.x, v.y, v.z) + 1
+    local d = math.huge
 
-    for _, direction in ipairs(directions()) do
-      local adj = v + location[direction]()
+    if not distance:get(v.x, v.y, v.z) then
+      local onto_mode = false
 
-      local build_direction
-      if direction:sub(1,1) == "-" then
-        build_direction = direction:sub(2,2)
-      else
-        build_direction = "-" .. direction:sub(1,1)
+      -- compute the new distance
+      for _, direction in ipairs(directions()) do
+        local adj = v + location[direction]()
+
+        local symbol, info = bp:symbol(v.x, v.y, v.z)
+
+        local dist_adj = distance:get(adj.x, adj.y, adj.z)
+        local symbol_adj, info_adj = bp:symbol(adj.x, adj.y, adj.z)
+
+        if tensor.get(info_adj, "onto") == opposite(direction) then
+          onto_mode = true
+
+          if not dist_adj then
+            d = math.huge
+            break
+          elseif d == math.huge then
+            d = dist_adj + 1
+          else
+            d = math.max(d, dist_adj + 1)
+          end
+        elseif not onto_mode and dist_adj and can_build_from(info, direction) then
+          d = math.min(d, dist_adj + 1)
+        end
       end
 
-      local symbol_adj, info_adj = bp:symbol(adj.x, adj.y, adj.z)
+      -- set distance and add new all adjacents if a distance was found
+      if d < math.huge then
+        distance:set(d, v.x, v.y, v.z)
 
-      if symbol_adj
-        and not tensor.get(info_adj, "nobuild", build_direction)
-        and not distance:get(adj.x, adj.y, adj.z)
-      then
-        distance:set(d, adj.x, adj.y, adj.z)
-        expand:push_back(adj)
+        for _, direction in ipairs(directions()) do
+          local adj = v + location[direction]()
+
+          local symbol_adj, info_adj = bp:symbol(adj.x, adj.y, adj.z)
+
+          if symbol_adj then
+            expand:push_back(adj)
+          end
+        end
       end
     end
   end
@@ -213,7 +263,7 @@ local function build(bp)
         turtle.digUp()
 
         distance:set(nil, above.x, above.y, above.z)
-      elseif not tensor.get(info, "nobuild", "-Y") then
+      elseif can_build_from(info, "-Y") then
         turtle.select(info.slot)
 
         if info.heading then
@@ -231,10 +281,10 @@ local function build(bp)
       local symbol, info = bp:symbol(below.x, below.y, below.z)
 
       if symbol == blueprint.AIR then
-        turtle.digUp()
+        turtle.digDown()
 
         distance:set(nil, below.x, below.y, below.z)
-      elseif not tensor.get(info, "nobuild", "Y") then
+      elseif can_build_from(info, "Y") then
         turtle.select(info.slot)
 
         if info.heading then
@@ -260,19 +310,23 @@ local function build(bp)
           turtle.dig()
 
           distance:set(nil, beside.x, beside.y, beside.z)
-        elseif not tensor.get(info, "nobuild")
-          or (heading.x == 1 and not info.nobuild["-X"])
-          or (heading.x == -1 and not info.nobuild["X"])
-          or (heading.z == 1 and not info.nobuild["-Z"])
-          or (heading.z == -1 and not info.nobuild["Z"])
-        then
-          move.turnTo(heading)
+        else
+          local build_dir
+          if heading.x == 1 then build_dir = "-X"
+          elseif heading.x == -1 then build_dir = "X"
+          elseif heading.z == 1 then build_dir = "-Z"
+          else build_dir = "Z"
+          end
 
-          turtle.select(info.slot)
+          if can_build_from(info, build_dir) then
+            move.turnTo(heading)
 
-          while not turtle.place() do turtle.dig() end
+            turtle.select(info.slot)
 
-          distance:set(nil, beside.x, beside.y, beside.z)
+            while not turtle.place() do turtle.dig() end
+
+            distance:set(nil, beside.x, beside.y, beside.z)
+          end
         end
       end
 
@@ -291,7 +345,7 @@ local function build(bp)
         not best or best.dist < d
         -- ties must be broken by going a direction that can build on the current location
         -- otherwise a loop can be reached
-        or (best.dist == d and not tensor.get(info, "nobuild", direction))
+        or (best.dist == d and can_build_from(info, direction))
       ) then
         best = { dist = d, coords = a }
       end

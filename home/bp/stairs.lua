@@ -11,7 +11,6 @@ local args = require("/lib/args").parse(
     flags = {
       up = "boolean",
       corner = "boolean",
-      ["skip-horizontal-frame"] = "boolean",
     },
   },
   { ... }
@@ -23,13 +22,13 @@ bp.symbols = {
   ["_"] = {
     slot = 1,
     comment = "Step Detail",
-    nobuild = bp.ONLY_BUILD_Y_POS,
+    onto = "-Y",
     heading = args.up and location.X() or -location.X(),
   },
   ["T"] = {
     slot = 2,
     comment = "Roof Detail",
-    nobuild = bp.ONLY_BUILD_Y_NEG,
+    onto = "Y",
     heading = args.up and -location.X() or location.X(),
   },
   ["|"] = {
@@ -39,19 +38,18 @@ bp.symbols = {
 }
 
 local y_i_mul = args.up and 1 or -1
+local y_off = args.up and 1 or 0
 
 for i = 0, args.length - 1 do
-  local y0, y1 = -2 + y_i_mul * i, 1 + args.interior_height + y_i_mul * i
+  local y0, y1 = -2 + y_i_mul * i + y_off, 1 + args.interior_height + y_i_mul * i + y_off
   local z0, z1 = -1, args.interior_width
 
   bp:cuboid(i, i, y0, y1, z0, z1, {
-    xyedge = not args["skip-horizontal-frame"] and "|" or nil,
-    yzedge = not args["skip-horizontal-frame"] and "|" or nil,
-    yface = not args["skip-horizontal-frame"] and "|" or nil,
+    edge = "|",
     corner = args.corner and "|",
-    xzedge = "|",
-    zface = "|",
     xface = bp.AIR,
+    yface = "|",
+    zface = "|",
     fill = bp.AIR,
   })
   bp:cuboid(i, i, y0 + 1, y0 + 1, z0 + 1, z1 - 1, { all = "_" })
