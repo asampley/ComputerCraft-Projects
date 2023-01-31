@@ -10,11 +10,11 @@ function tensor:get(...)
   -- keep appending indices until nil or the
   -- value is reached
   for _, i in ipairs({...}) do
-    get = get[i]
-
     if get == nil then
       break
     end
+
+    get = get[i]
   end
 
   return get

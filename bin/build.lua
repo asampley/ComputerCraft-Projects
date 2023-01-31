@@ -132,15 +132,9 @@ local function directions()
   return { "-Y", "Y", "-X", "X", "-Z", "Z" }
 end
 
---[[
-
-Build the blueprint, going forward,
-to complete a line, right to do the
-next lines and complete a plane, and
-up to complete the next planes and
-complete the structure
-
---]]
+-- Build the blueprint.
+--
+-- If a path cannot be calcuated to create the blueprint an error is thrown.
 local function build(bp)
   -- create distance map
   local distance = tensor.new()
@@ -157,10 +151,17 @@ local function build(bp)
     for _, direction in ipairs(directions()) do
       local adj = v + location[direction]()
 
-      local symbol, symbol_info = bp:symbol(adj.x, adj.y, adj.z)
+      local build_direction
+      if direction:sub(1,1) == "-" then
+        build_direction = direction:sub(2,2)
+      else
+        build_direction = "-" .. direction:sub(1,1)
+      end
 
-      if symbol
-        and not (symbol_info and symbol_info.nobuild and symbol_info.nobuild[direction])
+      local symbol_adj, info_adj = bp:symbol(adj.x, adj.y, adj.z)
+
+      if symbol_adj
+        and not tensor.get(info_adj, "nobuild", build_direction)
         and not distance:get(adj.x, adj.y, adj.z)
       then
         distance:set(d, adj.x, adj.y, adj.z)
@@ -171,9 +172,11 @@ local function build(bp)
 
   for x, xx in pairs(bp.blocks) do
     for y, yy in pairs(xx) do
-      for z, _ in pairs(yy) do
+      for z, zz in pairs(yy) do
         if not distance:get(x, y, z) then
-          error("Unable to create a path to all blocks: Could not reach " .. x .. "," .. y .. "," .. z)
+          error("Unable to create a path to all blocks:"
+          .. " Could not reach " .. x .. "," .. y .. "," .. z
+          .. " (" .. zz .. ")")
         end
       end
     end
@@ -203,40 +206,44 @@ local function build(bp)
     end
 
     local above = pos + up
-    if distance:get(above.x, above.y, above.z) then
-      if local_max(above) then
-        local symbol, info = bp:symbol(above.x, above.y, above.z)
+    if distance:get(above.x, above.y, above.z) and local_max(above) then
+      local symbol, info = bp:symbol(above.x, above.y, above.z)
 
-        if symbol == blueprint.AIR then
-          turtle.digUp()
+      if symbol == blueprint.AIR then
+        turtle.digUp()
 
-          distance:set(nil, above.x, above.y, above.z)
-        elseif not info or not info.nobuild or not info.nobuild["Y"] then
-          turtle.select(info.slot)
+        distance:set(nil, above.x, above.y, above.z)
+      elseif not tensor.get(info, "nobuild", "-Y") then
+        turtle.select(info.slot)
 
-          while not turtle.placeUp() do turtle.digUp() end
-
-          distance:set(nil, above.x, above.y, above.z)
+        if info.heading then
+          move.turnTo(info.heading)
         end
+
+        while not turtle.placeUp() do turtle.digUp() end
+
+        distance:set(nil, above.x, above.y, above.z)
       end
     end
 
     local below = pos - up
-    if distance:get(below.x, below.y, below.z) then
-      if local_max(below) then
-        local symbol, info = bp:symbol(below.x, below.y, below.z)
+    if distance:get(below.x, below.y, below.z) and local_max(below) then
+      local symbol, info = bp:symbol(below.x, below.y, below.z)
 
-        if symbol == blueprint.AIR then
-          turtle.digUp()
+      if symbol == blueprint.AIR then
+        turtle.digUp()
 
-          distance:set(nil, below.x, below.y, below.z)
-        elseif not info or not info.nobuild or not info.nobuild["-Y"] then
-          turtle.select(info.slot)
+        distance:set(nil, below.x, below.y, below.z)
+      elseif not tensor.get(info, "nobuild", "Y") then
+        turtle.select(info.slot)
 
-          while not turtle.placeDown() do turtle.digDown() end
-
-          distance:set(nil, below.x, below.y, below.z)
+        if info.heading then
+          move.turnTo(info.heading)
         end
+
+        while not turtle.placeDown() do turtle.digDown() end
+
+        distance:set(nil, below.x, below.y, below.z)
       end
     end
 
@@ -244,30 +251,28 @@ local function build(bp)
 
     for _ = 1, 4 do
       local beside = pos + heading
-      if distance:get(beside.x, beside.y, beside.z) then
-        if local_max(beside) then
-          local symbol, info = bp:symbol(beside.x, beside.y, beside.z)
+      if distance:get(beside.x, beside.y, beside.z) and local_max(beside) then
+        local symbol, info = bp:symbol(beside.x, beside.y, beside.z)
 
-          if symbol == blueprint.AIR then
-            move.turnTo(heading)
+        if symbol == blueprint.AIR then
+          move.turnTo(heading)
 
-            turtle.dig()
+          turtle.dig()
 
-            distance:set(nil, beside.x, beside.y, beside.z)
-          elseif not info or not info.nobuild
-            or (heading.x == 1 and not info.nobuild["X"])
-            or (heading.x == -1 and not info.nobuild["-X"])
-            or (heading.z == 1 and not info.nobuild["Z"])
-            or (heading.z == -1 and not info.nobuild["-Z"])
-          then
-            move.turnTo(heading)
+          distance:set(nil, beside.x, beside.y, beside.z)
+        elseif not tensor.get(info, "nobuild")
+          or (heading.x == 1 and not info.nobuild["-X"])
+          or (heading.x == -1 and not info.nobuild["X"])
+          or (heading.z == 1 and not info.nobuild["-Z"])
+          or (heading.z == -1 and not info.nobuild["Z"])
+        then
+          move.turnTo(heading)
 
-            turtle.select(info.slot)
+          turtle.select(info.slot)
 
-            while not turtle.place() do turtle.dig() end
+          while not turtle.place() do turtle.dig() end
 
-            distance:set(nil, beside.x, beside.y, beside.z)
-          end
+          distance:set(nil, beside.x, beside.y, beside.z)
         end
       end
 
@@ -281,11 +286,12 @@ local function build(bp)
       local _, info = bp:symbol(pos.x, pos.y, pos.z)
 
       local d = distance:get(a.x, a.y, a.z)
+
       if d and (
         not best or best.dist < d
         -- ties must be broken by going a direction that can build on the current location
         -- otherwise a loop can be reached
-        or (best.dist == d and info and info.nobuild and not info.nobuild[direction])
+        or (best.dist == d and not tensor.get(info, "nobuild", direction))
       ) then
         best = { dist = d, coords = a }
       end
@@ -303,23 +309,31 @@ inventory.setAutoRefill(true)
 
 -- Now, let's see what file we're
 -- using
-local args = { ... }
-if #args ~= 1
-then
-  print("Usage: <fileName>")
-  return
-end
+local args = require("/lib/args").parse({
+    required = {
+      { name = "blueprint" },
+    },
+    rest = { name = "args" }
+  },
+  { ... }
+)
 
-local fileName = args[1]
-local bp = loadfile(fileName, "bt", _ENV)
-if bp then
-  bp = bp()
+local bp
+if args.blueprint:sub(-4) == ".lua" then
+  local err
+  bp, err = loadfile(args.blueprint, "bt", _ENV)
+
+  if bp then
+    bp = bp(table.unpack(args.args or {}))
+  else
+    error(err)
+  end
 else
-  bp = readBlueprint(fileName)
+  bp = readBlueprint(args.blueprint)
 end
 
 if not bp then
-  error("Unable to read blueprint "..fileName)
+  error("Unable to read blueprint "..args.blueprint)
 end
 
 print("Loaded blueprint:")
@@ -328,7 +342,7 @@ local counts = bp:counts()
 local i = 1
 while i <= 16 do
   for symbol, info in pairs(bp.symbols) do
-    if info.slot == i then
+    if info.slot == i and counts[symbol] then
       local text = "    " .. symbol .. "->" .. info.slot .. " " .. info.comment
         .. " x" .. counts[symbol]
 

@@ -7,6 +7,36 @@ local blueprint = {
   ONLY_BUILD_X = { ["Y"] = true, ["-Y"] = true, ["Z"] = true, ["-Z"] = true },
   ONLY_BUILD_Y = { ["X"] = true, ["-X"] = true, ["Z"] = true, ["-Z"] = true },
   ONLY_BUILD_Z = { ["X"] = true, ["-X"] = true, ["Y"] = true, ["-Y"] = true },
+  ONLY_BUILD_X_POS = {
+    ["-X"] = true,
+    ["Y"] = true, ["-Y"] = true,
+    ["Z"] = true, ["-Z"] = true,
+  },
+  ONLY_BUILD_X_NEG = {
+    ["X"] = true,
+    ["Y"] = true, ["-Y"] = true,
+    ["Z"] = true, ["-Z"] = true,
+  },
+  ONLY_BUILD_Y_POS = {
+    ["X"] = true, ["-X"] = true,
+    ["-Y"] = true,
+    ["Z"] = true, ["-Z"] = true,
+  },
+  ONLY_BUILD_Y_NEG = {
+    ["X"] = true, ["-X"] = true,
+    ["Y"] = true,
+    ["Z"] = true, ["-Z"] = true,
+  },
+  ONLY_BUILD_Z_POS = {
+    ["X"] = true, ["-X"] = true,
+    ["Y"] = true, ["-Y"] = true,
+    ["-Z"] = true,
+  },
+  ONLY_BUILD_Z_NEG = {
+    ["X"] = true, ["-X"] = true,
+    ["Y"] = true, ["-Y"] = true,
+    ["Z"] = true,
+  },
 }
 
 -- create an empty blueprint
@@ -83,9 +113,9 @@ function blueprint:cuboid(x0, x1, y0, y1, z0, z1, symbols)
   self:render(x0, x1, y0, y1, z0, z1, function(x, y, z)
     local bounds = ""
 
-    if x == x0 or x == x1 then bounds = bounds .. "x" end
-    if y == y0 or y == y1 then bounds = bounds .. "y" end
-    if z == z0 or z == z1 then bounds = bounds .. "z" end
+    if math.abs(x0 - x) < 0.5 or math.abs(x1 - x) < 0.5 then bounds = bounds .. "x" end
+    if math.abs(y0 - y) < 0.5 or math.abs(y1 - y) < 0.5 then bounds = bounds .. "y" end
+    if math.abs(z0 - z) < 0.5 or math.abs(z1 - z) < 0.5 then bounds = bounds .. "z" end
 
     local block = blocks[bounds]
 

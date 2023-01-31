@@ -63,13 +63,13 @@ m.parse = function(definition, arguments)
       flags = false
     else
       -- check for long flags and then short flags
-      local flag = v:match("^%-%-(%a%w*)$")
+      local flag = v:match("^%-%-(%a[%w%-_]*)$")
 
       if not flag then
         local short = v:match("^%-(%a)$")
 
         if short then
-          flag = definition.flags[short]
+          flag = definition.flags and definition.flags[short]
 
           if not flag then
             bad(definition, "Unknown short form for flag \"" .. short "\"")
@@ -79,7 +79,7 @@ m.parse = function(definition, arguments)
 
       if flags and flag then
         -- check the flag definition and grab the value if it is required
-        local flagDef = definition.flags[flag]
+        local flagDef = definition.flags and definition.flags[flag]
 
         if not flagDef then
           bad(definition, "\nNo definition for flag \"" .. flag .. "\"")
