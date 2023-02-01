@@ -2,42 +2,18 @@ local tensor = require("/lib/tensor")
 
 local blueprint = {
   AIR = ".",
-
-  -- constants for nobuild property
-  ONLY_BUILD_X = { ["Y"] = true, ["-Y"] = true, ["Z"] = true, ["-Z"] = true },
-  ONLY_BUILD_Y = { ["X"] = true, ["-X"] = true, ["Z"] = true, ["-Z"] = true },
-  ONLY_BUILD_Z = { ["X"] = true, ["-X"] = true, ["Y"] = true, ["-Y"] = true },
-  ONLY_BUILD_X_POS = {
-    ["-X"] = true,
-    ["Y"] = true, ["-Y"] = true,
-    ["Z"] = true, ["-Z"] = true,
-  },
-  ONLY_BUILD_X_NEG = {
-    ["X"] = true,
-    ["Y"] = true, ["-Y"] = true,
-    ["Z"] = true, ["-Z"] = true,
-  },
-  ONLY_BUILD_Y_POS = {
-    ["X"] = true, ["-X"] = true,
-    ["-Y"] = true,
-    ["Z"] = true, ["-Z"] = true,
-  },
-  ONLY_BUILD_Y_NEG = {
-    ["X"] = true, ["-X"] = true,
-    ["Y"] = true,
-    ["Z"] = true, ["-Z"] = true,
-  },
-  ONLY_BUILD_Z_POS = {
-    ["X"] = true, ["-X"] = true,
-    ["Y"] = true, ["-Y"] = true,
-    ["-Z"] = true,
-  },
-  ONLY_BUILD_Z_NEG = {
-    ["X"] = true, ["-X"] = true,
-    ["Y"] = true, ["-Y"] = true,
-    ["Z"] = true,
-  },
 }
+
+-- create onlybuild property table from list
+function blueprint.onlybuild(...)
+  local onlybuild = {}
+
+  for _, v in ipairs({...}) do
+    onlybuild[v] = true
+  end
+
+  return onlybuild
+end
 
 -- create an empty blueprint
 function blueprint.new()
@@ -75,18 +51,42 @@ end
 -- Specify options to change what symbols are where. The most specific
 -- will be taken.
 -- {
---   corner = "1", -- any of the up to 8 corners of the cuboid
---   xyedge = "2", -- edge that is on an x and y bound (4 total)
---   xzedge = "2", -- edge that is on an x and z bound (4 total)
---   yzedge = "2", -- edge that is on a y and z bound (4 total)
---   edge = "3", -- any block on an edge (excludes the corners)
+--   -- configure the the 8 corners of the cuboid
+--   -- specify specific corners (lowercase is negative on the axis e.g. xYz is -x, +y, -z)
+--   -- all will apply to any unset corners.
+--   corner = {
+--     xyz = "1", xyZ = "1", xYz = "1", xYZ = "1", Xyz = "1", XyZ = "1", XYz = "1", XYZ = "1",
+--     all = "2",
+--   },
+--
+--   -- configure the 12 edges of the cuboid (excludes the corners)
+--   -- specify specific edges (lowercase is negative on the axis. e.g. xY is -x, +y)
+--   -- all will apply to any unset edges.
+--   -- the "a" prefixed strings will do both positive and negative of both axes
+--   edge = {
+--     xy = "1", xY = "1", Xy = "1", XY = "1", axy = "2",
+--     xz = "1", xZ = "1", Xz = "1", XZ = "1", axz = "2",
+--     yz = "1", yZ = "1", Yz = "1", YZ = "1", ayz = "2",
+--     all = "3",
+--   },
+--
 --   frame = "4", -- combination of corner and edge
---   xface = "5", -- face on an x boundary (2 total)
---   yface = "5", -- face on a y boundary (2 total)
---   zface = "5", -- face on a z boundary (2 total)
---   face = "6", -- interior area of face (excludes the frame)
+--
+--   -- configure the 6 faces of the cuboid (excludes the frame)
+--   -- specify specific faces (lowercase is negative on the axis. e.g. x is -x)
+--   -- all will apply to any unset edges.
+--   -- the "a" prefixed strings will do both positive and negative of the axis
+--   face = {
+--     x = "1", X = "1", ax = "2",
+--     y = "1", Y = "1", ay = "2",
+--     z = "1", Z = "1", az = "2",
+--     all = "3",
+--   },
+--
 --   hull = "7", -- combination of corner, edge, and face
+--
 --   fill = "8", -- interior volume of the cuboid (excluds the hull)
+--
 --   all = "9", -- all the blocks in the cuboid
 -- }
 --
@@ -95,29 +95,51 @@ end
 -- checkerboard effects, for example, or any other effect you can write
 -- into a function.
 function blueprint:cuboid(x0, x1, y0, y1, z0, z1, symbols)
-  local corner = symbols.corner or symbols.frame or symbols.hull or symbols.all
-  local edge = symbols.edge or symbols.frame or symbols.hull or symbols.all
-  local face = symbols.face or symbols.hull or symbols.all
-
-  local blocks = {
-    xyz = corner,
-    xy = symbols.xyedge or edge,
-    xz = symbols.xzedge or edge,
-    yz = symbols.yzedge or edge,
-    x = symbols.xface or face,
-    y = symbols.yface or face,
-    z = symbols.zface or face,
-    [""] = symbols.fill or symbols.all,
-  }
-
   self:render(x0, x1, y0, y1, z0, z1, function(x, y, z)
     local bounds = ""
 
-    if math.abs(x0 - x) < 0.5 or math.abs(x1 - x) < 0.5 then bounds = bounds .. "x" end
-    if math.abs(y0 - y) < 0.5 or math.abs(y1 - y) < 0.5 then bounds = bounds .. "y" end
-    if math.abs(z0 - z) < 0.5 or math.abs(z1 - z) < 0.5 then bounds = bounds .. "z" end
+    if math.abs(x0 - x) < 0.5 then bounds = bounds .. "x"
+    elseif math.abs(x1 - x) < 0.5 then bounds = bounds .. "X"
+    end
 
-    local block = blocks[bounds]
+    if math.abs(y0 - y) < 0.5 then bounds = bounds .. "y"
+    elseif math.abs(y1 - y) < 0.5 then bounds = bounds .. "Y"
+    end
+
+    if math.abs(z0 - z) < 0.5 then bounds = bounds .. "z"
+    elseif math.abs(z1 - z) < 0.5 then bounds = bounds .. "Z"
+    end
+
+    local block
+    if #bounds == 3 then
+      block = (symbols.corner and (
+        symbols.corner[bounds]
+        or symbols.corner["a" .. bounds:lower()]
+        or symbols.corner.all
+      ))
+    elseif #bounds == 2 then
+      block = (symbols.edge and (
+        symbols.edge[bounds]
+        or symbols.edge["a" .. bounds:lower()]
+        or symbols.edge.all
+      ))
+    elseif #bounds == 1 then
+      block = (symbols.face and (
+        symbols.face[bounds]
+        or symbols.face["a" .. bounds:lower()]
+        or symbols.face.all
+      ))
+    end
+
+    if #bounds >= 2 then
+      block = block or symbols.frame
+    end
+
+    if #bounds >= 1 then
+      block = block or symbols.hull
+    end
+
+    block = block or symbols.all
 
     if type(block) == "function" then
       block = block(x, y, z)

@@ -141,15 +141,7 @@ local function opposite(direction)
 end
 
 local function can_build_from(info, direction)
-  if not info then
-    return true
-  elseif info.onto and info.onto ~= opposite(direction) then
-    return false
-  elseif info.nobuild and info.nobuild[direction] then
-    return false
-  else
-    return true
-  end
+  return not info or not info.onlybuild or info.onlybuild[direction]
 end
 
 -- Build the blueprint.
@@ -176,7 +168,7 @@ local function build(bp)
     local d = math.huge
 
     if not distance:get(v.x, v.y, v.z) then
-      local onto_mode = false
+      local needs_mode = false
 
       -- compute the new distance
       for _, direction in ipairs(directions()) do
@@ -187,8 +179,8 @@ local function build(bp)
         local dist_adj = distance:get(adj.x, adj.y, adj.z)
         local symbol_adj, info_adj = bp:symbol(adj.x, adj.y, adj.z)
 
-        if tensor.get(info_adj, "onto") == opposite(direction) then
-          onto_mode = true
+        if tensor.get(info_adj, "needs") == opposite(direction) then
+          needs_mode = true
 
           if not dist_adj then
             d = math.huge
@@ -198,7 +190,7 @@ local function build(bp)
           else
             d = math.max(d, dist_adj + 1)
           end
-        elseif not onto_mode and dist_adj and can_build_from(info, direction) then
+        elseif not needs_mode and dist_adj and can_build_from(info, direction) then
           d = math.min(d, dist_adj + 1)
         end
       end

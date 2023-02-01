@@ -6,17 +6,17 @@ bp.symbols = {
   ["|"] = {
     slot = 1,
     comment = "Frame vertical",
-    nobuild = bp.ONLY_BUILD_Y,
+    onlybuild = bp.onlybuild("Y", "-Y"),
   },
   ["-"] = {
     slot = 1,
     comment = "Frame along x",
-    nobuild = bp.ONLY_BUILD_X,
+    onlybuild = bp.onlybuild("X", "-X"),
   },
   ["_"] = {
     slot = 1,
     comment = "Frame along z",
-    nobuild = bp.ONLY_BUILD_Z,
+    onlybuild = bp.onlybuild("Z", "-Z"),
   },
   ["^"] = {
     slot = 2,
@@ -24,7 +24,10 @@ bp.symbols = {
   },
 }
 
-local style = { frame = "|", xyedge = "_", yzedge = "-", corner = "^" }
+local style = {
+  edge = { axy = "_", ayz = "-", axz = "|" },
+  corner = { all = "^" }
+}
 
 bp:cuboid(0, 5, 0, 5, 0, 5, style)
 bp:cuboid(1, 4, 5, 8, 1, 4, style)
