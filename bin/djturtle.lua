@@ -5,50 +5,19 @@
 
 -- name, duration
 local music = {
-  cat      = 178,
-  thirteen = 185,
-  blocks   = 345,
-  chirp    = 185,
-  far      = 174,
-  mall     = 197,
-  mellohi  = 96,
-  stal     = 150,
-  strad    = 188,
-  ward     = 251,
-  eleven   = 71,
-  wait     = 258
+  ["minecraft:music_disc_13"] = 185,
+  ["minecraft:music_disc_cat"] = 178,
+  ["minecraft:music_disc_blocks"] = 345,
+  ["minecraft:music_disc_chirp"] = 185,
+  ["minecraft:music_disc_far"] = 174,
+  ["minecraft:music_disc_mall"] = 197,
+  ["minecraft:music_disc_mellohi"] = 96,
+  ["minecraft:music_disc_stal"] = 150,
+  ["minecraft:music_disc_strad"] = 188,
+  ["minecraft:music_disc_ward"] = 251,
+  ["minecraft:music_disc_11"] = 71,
+  ["minecraft:music_disc_wait"] = 258
 }
-
--- read config
-local config_path = "/etc/djturtle"
-local disks = {}
-local config = fs.open(config_path, "r")
-
-if not config
-then
-  print("Config file not found at:\n" .. config_path)
-  return
-end
-while true do
-  local line = config.readLine()
-  if line
-  then
-    -- if the music is invalid, complain
-    if not music[line]
-    then
-      print("I don't know the music \"" .. line .. "\"")
-      print("Please fix the config file")
-      return
-    else
-      print("Loaded \"" .. line .. "\"")
-      table.insert(disks, line)
-    end
-  else
-    break
-  end
-end
-
-config.close()
 
 -- loop
 math.randomseed(os.time())
@@ -56,19 +25,29 @@ while true do
   -- take disk out of machine
   turtle.suck()
 
-  -- pick random track
-  local num = math.random(#disks)
-  turtle.select(num)
+  -- pick random item
+  local slot = math.random(16)
 
-  -- put disk in
-  turtle.drop()
+  -- get duration of disc if it exists
+  local info = turtle.getItemDetail(slot)
 
-  -- get duration
-  local duration = music[disks[num]]
+  if info and info.name then
+    local duration = music[turtle.getItemDetail(slot).name]
 
-  -- play music
-  shell.run("dj")
+    if duration then
+      -- select disc
+      turtle.select(slot)
 
-  -- wait for song to finish
-  sleep(duration)
+      -- put disk in
+      turtle.drop()
+
+      -- get duration
+
+      -- play music
+      shell.run("rom/programs/fun/dj")
+
+      -- wait for song to finish
+      sleep(duration)
+    end
+  end
 end
